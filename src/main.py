@@ -20,33 +20,53 @@ __license__ = """
 from os import path, pardir
 import sys
 import json
+from ConversionSettings import ConversionSettings
+
 
 class Main():
-    def read_config(self, base_dir, config_file_name = 'config.json'):
+    def read_file_and_parse_json(self, path_to_file):
+        """
+        Reads content from specified path and tries to parse received content.
+        """
+        try:
+            with open(path_to_file) as file:
+                content = file.read()
+            return json.loads(content)
+        except IOError as io_error:
+            print('--[Main::read_file_and_parse_json] failed to read from %s \n %s' % (path_to_file, io_error))
+            sys.exit()
+        except json.JSONDecodeError as decode_error:
+            print('--[Main::read_file_and_parse_json] failed to parse content of %s \n %s' % (path_to_file, decode_error))
+            sys.exit()
+
+    def read_config(self, base_dir, config_file_name='config.json'):
         """
         Reads the configuration file. 
         """
         path_to_config = path.join(base_dir, 'config', config_file_name)
-
-        try:
-            with open(path_to_config, 'r') as config_file:
-                config = config_file.read()
-            
-            dict_config = json.loads(config)
-            dict_config['logs_dir_path'] = path.join(base_dir, 'logs_directory')
-            dict_config['data_types_map_addr'] = path.join(base_dir, 'config', 'data_types_map.json')
-            return dict_config
-
-        except IOError as io_error:
-            print('--[Main::read_config] failed to read from %s \n %s' % (path_to_config, io_error))
-            sys.exit()
-        except json.JSONDecodeError as decode_error:
-            print('--[Main::read_config] failed to parse content of %s \n %s' % (path_to_config, decode_error))
-            sys.exit()
+        config = self.read_file_and_parse_json(path_to_config)
+        config['logs_dir_path'] = path.join(base_dir, 'logs_directory')
+        config['data_types_map_addr'] = path.join(base_dir, 'config', 'data_types_map.json')
+        return config
         
+    def read_extra_config(self, config, base_dir):
+        """
+        Reads the extra configuration file, if necessary.
+        """
+        if not config['enable_extra_config']:
+            config['enable_extra_config'] = None
+            return config
+
+        path_to_extra_config = path.join(base_dir, 'config', 'extra_config.json')
+        extra_config = self.read_file_and_parse_json(path_to_extra_config)
+        config['extra_config'] = extra_config
+        return config
+
 
 if __name__ == '__main__':
     base_dir = path.abspath(path.join(path.dirname(path.realpath(__file__)), pardir))
     app = Main()
-    dict_config = app.read_config(base_dir)
-    print(dict_config)
+    config = app.read_config(base_dir)
+    config = app.read_extra_config(config, base_dir)
+    conversionSettings = ConversionSettings(config)
+    print(type(conversionSettings))

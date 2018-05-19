@@ -7,224 +7,224 @@
         "2. In each value object, <type> represents a corresponding PostgreSQL data-type.",
         "3. In each value object, <increased_size> represents a PostgreSQL data-type corresponding to UNSIGNED MySQL data-types.",
         "   For example MySQL int equals to PostgreSQL int, but MySQL int unsigned should be converted to PostgreSQL bigint.",
-        "4. In each value object, <mySqlVarLenPgSqlFixedLen> should be true if MySQL data-type has variable length, ",
+        "4. In each value object, <mysql_var_len_pgsql_fixed_len> should be true if MySQL data-type has variable length, ",
         "   but corresponding PostgreSQL data-type has fixed length. For example: MySQL int(11) -> PostgreSQL int.",
-        "   In any other case <mySqlVarLenPgSqlFixedLen> should be false."
+        "   In any other case <mysql_var_len_pgsql_fixed_len> should be false."
     ],
 
     "json" : {
-        "increased_size"           : "",
-        "type"                     : "json",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "increased_size": "",
+        "type": "json",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "bit" : {
-        "increased_size"           : "bit varying",
-        "type"                     : "bit varying",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "increased_size": "bit varying",
+        "type": "bit varying",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "year" : {
-        "increased_size"           : "int",
-        "type"                     : "smallint",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "increased_size": "int",
+        "type": "smallint",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "tinyint" : {
         "increased_size"           : "int",
-        "type"                     : "smallint",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "smallint",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "smallint" : {
         "increased_size"           : "int",
-        "type"                     : "smallint",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "smallint",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "mediumint" : {
         "increased_size"           : "bigint",
-        "type"                     : "int",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "int",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "int" : {
         "increased_size"           : "bigint",
-        "type"                     : "int",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "int",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "bigint" : {
         "increased_size"           : "bigint",
-        "type"                     : "bigint",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "bigint",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "float" : {
         "increased_size"           : "double precision",
-        "type"                     : "real",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "real",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "double" : {
         "increased_size"           : "double precision",
-        "type"                     : "double precision",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "double precision",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "double precision" : {
         "increased_size"           : "double precision",
-        "type"                     : "double precision",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "double precision",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "geometry" : {
         "increased_size"           : "",
-        "type"                     : "geometry",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "geometry",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "numeric" : {
         "increased_size"           : "",
-        "type"                     : "numeric",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "numeric",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "decimal" : {
         "increased_size"           : "",
-        "type"                     : "decimal",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "decimal",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "decimal(19,2)" : {
         "increased_size"           : "numeric",
-        "type"                     : "money",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "money",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "char" : {
         "increased_size"           : "",
-        "type"                     : "character",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "character",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "varchar" : {
         "increased_size"           : "",
-        "type"                     : "character varying",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "character varying",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "date" : {
         "increased_size"           : "",
-        "type"                     : "date",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "date",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "time" : {
         "increased_size"           : "",
-        "type"                     : "time",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "time",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "datetime" : {
         "increased_size"           : "",
-        "type"                     : "timestamp",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "timestamp",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "timestamp" : {
         "increased_size"           : "",
-        "type"                     : "timestamp",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "timestamp",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "point" : {
         "increased_size"           : "",
-        "type"                     : "geometry",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "geometry",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "linestring" : {
         "increased_size"           : "",
-        "type"                     : "geometry",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "geometry",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "polygon" : {
         "increased_size"           : "",
-        "type"                     : "geometry",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "geometry",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "enum" : {
         "increased_size"           : "",
-        "type"                     : "character varying(255)",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "character varying(255)",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "set" : {
         "increased_size"           : "",
-        "type"                     : "character varying(255)",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "character varying(255)",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "tinytext" : {
         "increased_size"           : "",
-        "type"                     : "text",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "text",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "mediumtext" : {
         "increased_size"           : "",
-        "type"                     : "text",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "text",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "longtext" : {
         "increased_size"           : "",
-        "type"                     : "text",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "text",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "text" : {
         "increased_size"           : "",
-        "type"                     : "text",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "text",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "varbinary" : {
         "increased_size"           : "",
-        "type"                     : "bytea",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "bytea",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "binary" : {
         "increased_size"           : "",
-        "type"                     : "bytea",
-        "mySqlVarLenPgSqlFixedLen" : true
+        "type": "bytea",
+        "mysql_var_len_pgsql_fixed_len": true
     },
 
     "tinyblob" : {
         "increased_size"           : "",
-        "type"                     : "bytea",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "bytea",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "mediumblob" : {
         "increased_size"           : "",
-        "type"                     : "bytea",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "bytea",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "longblob" : {
         "increased_size"           : "",
-        "type"                     : "bytea",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "bytea",
+        "mysql_var_len_pgsql_fixed_len": false
     },
 
     "blob" : {
         "increased_size"           : "",
-        "type"                     : "bytea",
-        "mySqlVarLenPgSqlFixedLen" : false
+        "type": "bytea",
+        "mysql_var_len_pgsql_fixed_len": false
     }
 }
