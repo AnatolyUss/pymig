@@ -17,6 +17,6 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 
-from .ConversionSettings import ConversionSettings
-from .QueryManager import QueryManager
-from .BootProcessor import BootProcessor
+
+class BootProcessor():
+    pass
