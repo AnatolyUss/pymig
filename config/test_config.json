@@ -11,17 +11,16 @@
     "source" : {
         "host"     : "localhost",
         "port"     : 3306,
-        "charset"  : "UTF8",
+        "charset"  : "utf8mb4",
         "database" : "nmig_test_db",
         "user"     : "root",
-        "password" : "0123456789",
-        "password" : "7370142533"
+        "password" : "0123456789"
     },
 
     "target_description" : [
         "Connection parameters to your PostgreSQL database",
         "Please ensure, that you have defined all parameters properly.",
-        "Ensure, that details like 'charset' are included (if necessary). nmig_test_db"
+        "Ensure, that details like 'charset' are included (if necessary)."
     ],
     "target" : {
         "host"     : "localhost",

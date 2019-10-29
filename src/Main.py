@@ -15,3 +15,15 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+
+import os
+
+import FsOps
+import BootProcessor
+from Conversion import Conversion
+
+if __name__ == '__main__':
+    BASE_DIR = os.getcwd()
+    config = FsOps.read_config(BASE_DIR)
+    config = FsOps.read_extra_config(config, BASE_DIR)
+    conversion = Conversion(config)

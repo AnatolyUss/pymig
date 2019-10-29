@@ -13,7 +13,7 @@
         "host"     : "localhost",
         "port"     : 3306,
         "database" : "test_db",
-        "charset"  : "UTF8",
+        "charset"  : "utf8mb4",
         "user"     : "root",
         "password" : "0123456789"
     },
@@ -34,7 +34,7 @@
 
     "max_db_connection_pool_size_description" : [
         "Maximal amount of simultaneous connections to your MySQL and PostgreSQL servers.",
-        "For example: 10 means, that nmig will create a pool of 10 connections to MySQL server",
+        "For example: 10 means, that pymig will create a pool of 10 connections to MySQL server",
         "and 10 connections to PostgreSQL server.",
         "20 connections to both servers."
     ],
@@ -42,21 +42,15 @@
 
     "encoding_description" : [
         "Python encoding type.",
-        "If not supplied, then utf-8 will be used as a default."
+        "If not supplied, then utf_8 will be used as a default."
     ],
-    "encoding" : "utf8",
+    "encoding" : "utf_8",
 
     "schema_description" : [
         "A name of the schema, that will contain all migrated tables.",
         "If not supplied, then a new schema will be created automatically."
     ],
     "schema" : "public",
-
-    "data_chunk_size_description" : [
-        "During migration each table's data will be split into chunks not larger than data_chunk_size (in MB).",
-        "If not supplied, then 10 MB will be used as a default."
-    ],
-    "data_chunk_size" : 10,
 
     "no_vacuum_description" : [
         "PostgreSQL VACUUM reclaims storage occupied by dead tuples.",
@@ -69,20 +63,26 @@
 
     "exclude_tables_description": [
         "List of tables, that will not be migrated.",
-        "By default, nmig will migrate all tables."
+        "By default, pymig will migrate all tables."
     ],
     "exclude_tables": [],
 
+    "include_tables_description": [
+        "List of tables, that will be migrated.",
+        "By default, pymig will migrate all tables."
+    ],
+    "include_tables": [],
+
     "migrate_only_data_description" : [
-        "In order to skip schema migration, and just migrate data into a preset schema",
+        "In order to skip schema migration, and just migrate data into a preset tables",
         " - set this parameter true."
     ],
     "migrate_only_data" : false,
 
     "delimiter_description" : [
-      "Specifies the character, that separates columns within each record.",
-      "This must be a single one-byte character.",
-      "The default is comma."
+        "Specifies the character, that separates columns within each record.",
+        "This must be a single one-byte character.",
+        "The default is comma."
     ],
     "delimiter" : ",",
 
