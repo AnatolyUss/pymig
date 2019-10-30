@@ -20,6 +20,48 @@ import json
 import os
 
 
+def write_to_file(path, mode, message):
+    """
+    Write a message to specified file.
+    :param path: string, a path to appropriate log file.
+    :param mode: string, a mode in which the file will be used.
+    :param message: string, a message to be logged.
+    :return: None
+    """
+    with open(path, mode) as file:
+        file.write(message)
+
+
+def generate_error(conversion, message, sql=''):
+    """
+    Writes a detailed error message to the "/errors-only.log" file.
+    :param conversion: Conversion, the configuration object.
+    :param message: string, an error message.
+    :param sql: string, SQL query that caused an error.
+    :return: None
+    """
+    message += '\n\n\tSQL: %s\n\n' % sql
+    log(conversion, message)
+    write_to_file(conversion.error_logs_path, 'a', message)
+
+
+def log(conversion, message, table_log_path=None):
+    """
+    Outputs given log.
+    Writes given log to the "/all.log" file.
+    If necessary, writes given log to the "/{tableName}.log" file.
+    :param conversion: Conversion, the configuration object.
+    :param message: string, string to be logged.
+    :param table_log_path: string,  a path to log file of some particular table.
+    :return: None
+    """
+    print(message)
+    write_to_file(conversion.all_logs_path, 'a', message)
+
+    if table_log_path:
+        write_to_file(table_log_path, 'a', message)
+
+
 def read_config(base_dir, config_file_name='config.json'):
     """
     Reads the main configuration file and returns its contents as a dictionary.
