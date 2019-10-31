@@ -22,9 +22,15 @@ import time
 
 class Conversion:
     def __init__(self, config):
+        """
+        Constructor.
+        :param config: dictionary, Pymig's configuration.
+        """
         self.config = config
         self.source_con_string = self.config['source']
         self.target_con_string = self.config['target']
+        self.mysql = None
+        self.pg = None
         self.logs_dir_path = self.config['logs_dir_path']
         self.data_types_map_addr = self.config['data_types_map_addr']
         self.all_logs_path = os.path.join(self.logs_dir_path, 'all.log')

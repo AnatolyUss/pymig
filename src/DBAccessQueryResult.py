@@ -16,28 +16,15 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 
-import DBVendors
-from DBAccess import DBAccess
 
-
-def boot(conversion):
-    """
-    Boots the migration.
-    :param conversion: Conversion, the configuration object.
-    """
-    db_access = DBAccess(conversion)
-    connection_error_message = check_connection(conversion, db_access)
-    # Get logo.
-    if connection_error_message:
-        pass
-
-
-def check_connection(conversion, db_access):
-    log_title = 'BootProcessor::check_connection'
-    result_message = ''
-    sql = 'SELECT 1;'
-    mysql_result = db_access.query(log_title, sql, DBVendors.MYSQL, False, False)
-    result_message += '	MySQL connection error: %s' % mysql_result.error if mysql_result.error else ''
-
-    # Ping PG.
-    return result_message
+class DBAccessQueryResult:
+    def __init__(self, client, data, error):
+        """
+        Constructor.
+        :param client: PooledSharedDBConnection | None
+        :param data: dictionary | None
+        :param error: Exception | None
+        """
+        self.client = client
+        self.data = data
+        self.error = error

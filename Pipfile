@@ -7,8 +7,8 @@ verify_ssl = true
 
 [packages]
 psycopg2 = "*"
-pymysql = "*"
 dbutils = "*"
+pymysql = "*"
 
 [requires]
 python_version = "3.7"

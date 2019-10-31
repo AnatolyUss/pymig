@@ -17,7 +17,6 @@ __license__ = """
 """
 
 import os
-
 import FsOps
 import BootProcessor
 from Conversion import Conversion

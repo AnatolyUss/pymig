@@ -18,8 +18,7 @@
     "default": {
         "dbutils": {
             "hashes": [
-                "sha256:0f7348ac0ea6c6830976628209dd3de3d76ac3e7f770c9225920866b50a70422",
-                "sha256:9e3babf079f96d5b7efcbe1ebdbebc1a3dfad52c9c5578583ff05458b0ec421f"
+                "sha256:0f7348ac0ea6c6830976628209dd3de3d76ac3e7f770c9225920866b50a70422"
             ],
             "index": "pypi",
             "version": "==1.3"
