@@ -18,7 +18,7 @@ __license__ = """
 
 import sys
 import pymysql
-from DBUtils.PooledDB import PooledDb
+from DBUtils import PooledDB
 from DBAccessQueryResult import DBAccessQueryResult
 import FsOps
 import DBVendors
@@ -33,20 +33,20 @@ class DBAccess:
         Ensures MySQL connection pool existence.
         :return: None
         """
-        if not self.conversion['mysql']:
+        if not self.conversion.mysql:
             try:
-                self.conversion['mysql'] = PooledDb(creator=pymysql,
-                                                    host=self.conversion.source_con_string.host,
-                                                    user=self.conversion.source_con_string.user,
-                                                    password=self.conversion.source_con_string.password,
-                                                    database=self.conversion.source_con_string.database,
-                                                    autocommit=True,
-                                                    charset=self.conversion.source_con_string.charset,
-                                                    blocking=False,
-                                                    cursorclass=pymysql.cursors.DictCursor,
-                                                    maxcached=self.conversion.max_db_connection_pool_size,
-                                                    maxshared=self.conversion.max_db_connection_pool_size,
-                                                    maxconnections=self.conversion.max_db_connection_pool_size)
+                self.conversion.mysql = PooledDB(creator=pymysql,
+                                                 host=self.conversion.source_con_string['host'],
+                                                 user=self.conversion.source_con_string['user'],
+                                                 password=self.conversion.source_con_string['password'],
+                                                 database=self.conversion.source_con_string['database'],
+                                                 autocommit=True,
+                                                 charset=self.conversion.source_con_string['charset'],
+                                                 blocking=False,
+                                                 cursorclass=pymysql.cursors.DictCursor,
+                                                 maxcached=self.conversion.max_db_connection_pool_size,
+                                                 maxshared=self.conversion.max_db_connection_pool_size,
+                                                 maxconnections=self.conversion.max_db_connection_pool_size)
             except Exception as e:
                 msg = '\t--[get_mysql_connection] Cannot connect to MySQL server...\n%s' % e
                 FsOps.generate_error(self.conversion, msg)
@@ -58,7 +58,7 @@ class DBAccess:
         :return: PooledSharedDBConnection
         """
         self.__get_mysql_connection()
-        return self.conversion['mysql'].connection(shareable=True)
+        return self.conversion.mysql.connection(shareable=True)
 
     def get_pg_client(self):
         pass

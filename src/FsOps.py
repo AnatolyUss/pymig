@@ -20,6 +20,32 @@ import json
 import os
 
 
+def create_logs_directory(conversion):
+    """
+    Creates logs directory.
+    :param conversion: Conversion, the configuration object.
+    :return: None
+    """
+    logs_title = 'FsOps::create_logs_directory'
+    __create_directory(conversion, conversion.logs_dir_path, logs_title)
+    __create_directory(conversion, conversion.not_created_views_path, logs_title)
+
+
+def __create_directory(conversion, directory_path, log_title):
+    """
+    Creates a directory at the specified path.
+    :param conversion: Conversion, the configuration object.
+    :param directory_path: string
+    :param log_title: string
+    :return: None
+    """
+    print('--[%s] Creating directory %s...' % (log_title, directory_path))
+    try:
+        os.mkdir(directory_path)
+    except FileExistsError:
+        print('Directory %s already exists.' % directory_path)
+
+
 def write_to_file(path, mode, message):
     """
     Write a message to specified file.
@@ -40,7 +66,7 @@ def generate_error(conversion, message, sql=''):
     :param sql: string, SQL query that caused an error.
     :return: None
     """
-    message += '\n\n\tSQL: %s\n\n' % sql
+    message += '\n\n\tSQL: %s\n\n' % sql if len(sql) != 0 else ''
     log(conversion, message)
     write_to_file(conversion.error_logs_path, 'a', message)
 

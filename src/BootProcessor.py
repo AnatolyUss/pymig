@@ -24,15 +24,16 @@ def boot(conversion):
     """
     Boots the migration.
     :param conversion: Conversion, the configuration object.
+    "return" None
     """
     db_access = DBAccess(conversion)
-    connection_error_message = check_connection(conversion, db_access)
+    connection_error_message = check_connection(db_access)
     # Get logo.
     if connection_error_message:
         pass
 
 
-def check_connection(conversion, db_access):
+def check_connection(db_access):
     log_title = 'BootProcessor::check_connection'
     result_message = ''
     sql = 'SELECT 1;'

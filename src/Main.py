@@ -26,3 +26,5 @@ if __name__ == '__main__':
     config = FsOps.read_config(BASE_DIR)
     config = FsOps.read_extra_config(config, BASE_DIR)
     conversion = Conversion(config)
+    FsOps.create_logs_directory(conversion)
+    BootProcessor.boot(conversion)
