@@ -34,11 +34,16 @@ def boot(conversion):
 
 
 def check_connection(db_access):
+    """
+    Checks correctness of connection details of both MySQL and PostgreSQL.
+    :param db_access: DBAccess instance
+    :return: string
+    """
     log_title = 'BootProcessor::check_connection'
     result_message = ''
     sql = 'SELECT 1;'
     mysql_result = db_access.query(log_title, sql, DBVendors.MYSQL, False, False)
     result_message += '	MySQL connection error: %s' % mysql_result.error if mysql_result.error else ''
-
-    # Ping PG.
+    pg_result = db_access.query(log_title, sql, DBVendors.PG, False, False)
+    result_message += '	PostgreSQL connection error: %s' % pg_result.error if pg_result.error else ''
     return result_message
