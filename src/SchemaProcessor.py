@@ -16,18 +16,23 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 
-import os
-from FsOps import FsOps
-from BootProcessor import BootProcessor
-from SchemaProcessor import SchemaProcessor
-from Conversion import Conversion
+from DBAccess import DBAccess
+import DBVendors
 
-if __name__ == '__main__':
-    BASE_DIR = os.getcwd()
-    config = FsOps.read_config(BASE_DIR)
-    config = FsOps.read_extra_config(config, BASE_DIR)
-    conversion = Conversion(config)
-    FsOps.create_logs_directory(conversion)
-    BootProcessor.boot(conversion)
-    FsOps.read_data_types_map(conversion)
-    SchemaProcessor.create_schema(conversion)
+
+class SchemaProcessor:
+    @staticmethod
+    def create_schema(conversion):
+        """
+        Creates a new PostgreSQL schema if it does not exist yet.
+        :param conversion: Conversion, Pymig configuration object.
+        :return: None
+        """
+        log_title = 'SchemaProcessor::create_schema'
+        sql = 'SELECT schema_name FROM information_schema.schemata WHERE schema_name = \'%s\';' % conversion.schema
+        db_access = DBAccess(conversion)
+        result = db_access.query(log_title, sql, DBVendors.PG, True, True)
+
+        if len(result.data) == 0:
+            sql = 'CREATE SCHEMA "%s";' % conversion.schema
+            db_access.query(log_title, sql, DBVendors.PG, True, False, result.client)

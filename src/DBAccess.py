@@ -22,7 +22,7 @@ import psycopg2
 from psycopg2.extras import DictCursor
 from DBUtils.PooledDB import PooledDB
 from DBAccessQueryResult import DBAccessQueryResult
-import FsOps
+from FsOps import FsOps
 import DBVendors
 
 
@@ -63,7 +63,6 @@ class DBAccess:
                             user=db_connection_details['user'],
                             password=db_connection_details['password'],
                             database=db_connection_details['database'],
-                            autocommit=True,
                             charset=db_connection_details['charset'],
                             blocking=False,
                             cursorclass=pymysql.cursors.DictCursor,
@@ -92,9 +91,7 @@ class DBAccess:
         """
         if db_vendor == DBVendors.PG:
             self.__ensure_pg_connection()
-            pg_client = self.conversion.pg.connection(shareable=True)
-            pg_client.autocommit = True
-            return pg_client
+            return self.conversion.pg.connection(shareable=True)
         elif db_vendor == DBVendors.MYSQL:
             self.__ensure_mysql_connection()
             return self.conversion.mysql.connection(shareable=True)
@@ -152,9 +149,12 @@ class DBAccess:
             else:
                 cursor.execute(sql)
 
+            client.commit()
             data = cursor.fetchall()
             self.__release_db_client_if_necessary(client, should_return_client)
             return DBAccessQueryResult(client, data, None)
+        except psycopg2.ProgrammingError:
+            return DBAccessQueryResult(client, [], None)
         except Exception as e:
             FsOps.generate_error(self.conversion, '\t--[%s] %s' % (caller, e), sql)
             if process_exit_on_error:
