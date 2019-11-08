@@ -21,6 +21,7 @@ from FsOps import FsOps
 from BootProcessor import BootProcessor
 from SchemaProcessor import SchemaProcessor
 from Conversion import Conversion
+from MigrationStateManager import MigrationStateManager
 
 if __name__ == '__main__':
     BASE_DIR = os.getcwd()
@@ -31,3 +32,4 @@ if __name__ == '__main__':
     BootProcessor.boot(conversion)
     FsOps.read_data_types_map(conversion)
     SchemaProcessor.create_schema(conversion)
+    MigrationStateManager.create_state_logs_table(conversion)
