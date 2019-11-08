@@ -122,3 +122,14 @@ def read_extra_config(config, base_dir):
         config['extra_config'] = json.loads(extra_config_str)
 
     return config
+
+
+def read_data_types_map(conversion):
+    """
+    Reads "./config/data_types_map.json" and converts its json content to js object.
+    :param conversion: Conversion, Pymig configuration object.
+    :return: None
+    """
+    with open(conversion.data_types_map_addr, 'r') as file:
+        contents = file.read()
+        conversion.data_types_map = json.loads(contents)

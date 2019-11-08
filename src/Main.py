@@ -28,3 +28,4 @@ if __name__ == '__main__':
     conversion = Conversion(config)
     FsOps.create_logs_directory(conversion)
     BootProcessor.boot(conversion)
+    FsOps.read_data_types_map(conversion)
