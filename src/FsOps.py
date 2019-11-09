@@ -45,7 +45,7 @@ class FsOps:
         try:
             os.mkdir(directory_path)
         except FileExistsError:
-            print('Directory %s already exists.' % directory_path)
+            print('\t--[%s] Directory %s already exists.' % (log_title, directory_path))
 
     @staticmethod
     def write_to_file(path, mode, message):

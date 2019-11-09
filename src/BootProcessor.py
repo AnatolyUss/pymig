@@ -30,8 +30,7 @@ class BootProcessor:
         :param conversion: Conversion, the configuration object.
         "return" None
         """
-        db_access = DBAccess(conversion)
-        connection_error_message = BootProcessor.__check_connection(db_access)
+        connection_error_message = BootProcessor.__check_connection(conversion)
 
         if connection_error_message:
             error_message = '\t --[BootProcessor::boot] %s.' % connection_error_message
@@ -42,7 +41,7 @@ class BootProcessor:
         SELECT EXISTS(SELECT 1 FROM information_schema.tables
         WHERE table_schema = '%s' AND table_name = '%s') AS state_logs_table_exist;
         """ % (conversion.schema, conversion.schema + conversion.mysql_db_name)
-        result = db_access.query('BootProcessor::boot', sql, DBVendors.PG, True, False)
+        result = DBAccess.query(conversion, 'BootProcessor::boot', sql, DBVendors.PG, True, False)
         state_logs_table_exist = result.data[0]['state_logs_table_exist']
         state_message = '''\n\t--[BootProcessor::boot] PYMIG is ready to restart after some failure.
         \n\t--[BootProcessor::boot] Consider checking log files at the end of migration.''' \
@@ -76,17 +75,17 @@ class BootProcessor:
                + '\n\t--[BootProcessor::boot] Configuration has been just loaded.'
 
     @staticmethod
-    def __check_connection(db_access):
+    def __check_connection(conversion):
         """
         Checks correctness of connection details of both MySQL and PostgreSQL.
-        :param db_access: DBAccess instance
+        :param conversion: Conversion, Pymig configuration object.
         :return: string
         """
         log_title = 'BootProcessor::check_connection'
         result_message = ''
         sql = 'SELECT 1;'
-        mysql_result = db_access.query(log_title, sql, DBVendors.MYSQL, False, False)
+        mysql_result = DBAccess.query(conversion, log_title, sql, DBVendors.MYSQL, False, False)
         result_message += '	MySQL connection error: %s' % mysql_result.error if mysql_result.error else ''
-        pg_result = db_access.query(log_title, sql, DBVendors.PG, False, False)
+        pg_result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, False, False)
         result_message += '	PostgreSQL connection error: %s' % pg_result.error if pg_result.error else ''
         return result_message

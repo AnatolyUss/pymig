@@ -32,8 +32,7 @@ class MigrationStateManager:
         log_title = 'MigrationStateManager::create_data_pool_table'
         table_name = '"{0}"."data_pool_{0}{1}"'.format(conversion.schema, conversion.mysql_db_name)
         sql = 'CREATE TABLE IF NOT EXISTS %s("id" BIGSERIAL, "metadata" TEXT);' % table_name
-        db_access = DBAccess(conversion)
-        db_access.query(log_title, sql, DBVendors.PG, True, False)
+        DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
         FsOps.log(conversion, '\t--[%s] table %s is created...' % (log_title, table_name))
 
     @staticmethod
@@ -50,15 +49,14 @@ class MigrationStateManager:
         "foreign_keys_loaded" BOOLEAN, "views_loaded" BOOLEAN);
         ''' % table_name
 
-        db_access = DBAccess(conversion)
-        result = db_access.query(log_title, sql, DBVendors.PG, True, True)
+        result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, True)
         sql = 'SELECT COUNT(1) AS cnt FROM %s' % table_name
-        result = db_access.query(log_title, sql, DBVendors.PG, True, True, result.client)
+        result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, True, result.client)
         msg = '\t--[%s] Table %s' % (log_title, table_name)
 
         if result.data[0]['cnt'] == 0:
             sql = 'INSERT INTO %s VALUES (FALSE, FALSE, FALSE, FALSE);' % table_name
-            db_access.query(log_title, sql, DBVendors.PG, True, False, result.client)
+            DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False, result.client)
             msg += ' is created.'
         else:
             msg += ' already exists.'

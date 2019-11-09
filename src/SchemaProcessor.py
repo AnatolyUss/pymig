@@ -30,9 +30,8 @@ class SchemaProcessor:
         """
         log_title = 'SchemaProcessor::create_schema'
         sql = 'SELECT schema_name FROM information_schema.schemata WHERE schema_name = \'%s\';' % conversion.schema
-        db_access = DBAccess(conversion)
-        result = db_access.query(log_title, sql, DBVendors.PG, True, True)
+        result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, True)
 
         if len(result.data) == 0:
             sql = 'CREATE SCHEMA "%s";' % conversion.schema
-            db_access.query(log_title, sql, DBVendors.PG, True, False, result.client)
+            DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False, result.client)

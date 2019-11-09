@@ -27,32 +27,31 @@ import DBVendors
 
 
 class DBAccess:
-    def __init__(self, conversion):
-        """
-        Constructor.
-        :param conversion: Conversion, Pymig configuration object.
-        """
-        self.conversion = conversion
-
-    def __ensure_mysql_connection(self):
+    @staticmethod
+    def __ensure_mysql_connection(conversion):
         """
         Ensures MySQL connection pool existence.
+        :param conversion: Conversion, Pymig configuration object.
         :return: None
         """
-        if not self.conversion.mysql:
-            self.conversion.mysql = self.__get_pooled_db(DBVendors.MYSQL, self.conversion.source_con_string)
+        if not conversion.mysql:
+            conversion.mysql = DBAccess.__get_pooled_db(conversion, DBVendors.MYSQL, conversion.source_con_string)
 
-    def __ensure_pg_connection(self):
+    @staticmethod
+    def __ensure_pg_connection(conversion):
         """
         Ensures PostgreSQL connection pool existence.
+        :param conversion: Conversion, Pymig configuration object.
         :return: None
         """
-        if not self.conversion.pg:
-            self.conversion.pg = self.__get_pooled_db(DBVendors.PG, self.conversion.target_con_string)
+        if not conversion.pg:
+            conversion.pg = DBAccess.__get_pooled_db(conversion, DBVendors.PG, conversion.target_con_string)
 
-    def __get_pooled_db(self, db_vendor, db_connection_details):
+    @staticmethod
+    def __get_pooled_db(conversion, db_vendor, db_connection_details):
         """
         Creates DBUtils.PooledDB instance.
+        :param conversion: Conversion, Pymig configuration object.
         :param db_vendor: int
         :param db_connection_details: dict
         :return: DBUtils.PooledDB instance
@@ -66,9 +65,9 @@ class DBAccess:
                             charset=db_connection_details['charset'],
                             blocking=False,
                             cursorclass=pymysql.cursors.DictCursor,
-                            maxcached=self.conversion.max_db_connection_pool_size,
-                            maxshared=self.conversion.max_db_connection_pool_size,
-                            maxconnections=self.conversion.max_db_connection_pool_size)
+                            maxcached=conversion.max_db_connection_pool_size,
+                            maxshared=conversion.max_db_connection_pool_size,
+                            maxconnections=conversion.max_db_connection_pool_size)
         elif db_vendor == DBVendors.PG:
             return PooledDB(creator=psycopg2,
                             host=db_connection_details['host'],
@@ -77,54 +76,63 @@ class DBAccess:
                             database=db_connection_details['database'],
                             client_encoding=db_connection_details['charset'],
                             blocking=False,
-                            maxcached=self.conversion.max_db_connection_pool_size,
-                            maxshared=self.conversion.max_db_connection_pool_size,
-                            maxconnections=self.conversion.max_db_connection_pool_size)
+                            maxcached=conversion.max_db_connection_pool_size,
+                            maxshared=conversion.max_db_connection_pool_size,
+                            maxconnections=conversion.max_db_connection_pool_size)
         else:
-            FsOps.generate_error(self.conversion, '\t --[DBAccess::get_db_client] unknown db_vendor %s.' % db_vendor)
+            FsOps.generate_error(conversion, '\t --[DBAccess::__get_pooled_db] unknown db_vendor %s.' % db_vendor)
             sys.exit(-1)
 
-    def get_db_client(self, db_vendor):
+    @staticmethod
+    def get_db_client(conversion, db_vendor):
         """
         Obtains PooledSharedDBConnection instance.
+        :param conversion: Conversion, Pymig configuration object.
+        :param db_vendor: int, mimics enum, representing database vendors: MySQL and PostgreSQL.
         :return: PooledSharedDBConnection
         """
         if db_vendor == DBVendors.PG:
-            self.__ensure_pg_connection()
-            return self.conversion.pg.connection(shareable=True)
+            DBAccess.__ensure_pg_connection(conversion)
+            return conversion.pg.connection(shareable=True)
         elif db_vendor == DBVendors.MYSQL:
-            self.__ensure_mysql_connection()
-            return self.conversion.mysql.connection(shareable=True)
+            DBAccess.__ensure_mysql_connection(conversion)
+            return conversion.mysql.connection(shareable=True)
         else:
-            FsOps.generate_error(self.conversion, '\t --[DBAccess::get_db_client] unknown db_vendor %s.' % db_vendor)
+            FsOps.generate_error(conversion, '\t --[DBAccess::get_db_client] unknown db_vendor %s.' % db_vendor)
             sys.exit(-1)
 
-    def release_db_client(self, client):
+    @staticmethod
+    def release_db_client(conversion, client):
         """
         Releases MySQL or PostgreSQL connection back to appropriate pool.
+        :param conversion: Conversion, Pymig configuration object.
         :param client: PooledSharedDBConnection
-        :return:
+        :return: None
         """
         try:
             client.close()
         except Exception as e:
-            FsOps.generate_error(self.conversion, '\t--[DBAccess::release_db_client] %s' % e)
+            FsOps.generate_error(conversion, '\t--[DBAccess::release_db_client] %s' % e)
 
-    def __release_db_client_if_necessary(self, client, should_hold_client):
+    @staticmethod
+    def __release_db_client_if_necessary(conversion, client, should_hold_client):
         """
         Checks if there are no more queries to be sent using current client.
         In such case the client should be released.
+        :param conversion: Conversion, Pymig configuration object.
         :param client: PooledSharedDBConnection
         :param should_hold_client: boolean
         :return: None
         """
         if not should_hold_client:
-            self.release_db_client(client)
+            DBAccess.release_db_client(conversion, client)
 
-    def query(self, caller, sql, vendor, process_exit_on_error, should_return_client, client=None, bindings=None):
+    @staticmethod
+    def query(conversion, caller, sql, vendor, process_exit_on_error, should_return_client, client=None, bindings=None):
         """
         Sends given SQL query to specified DB.
         Performs appropriate actions (requesting/releasing client) against target connections pool.
+        :param conversion: Conversion, Pymig configuration object.
         :param caller: string, a name of the function, that has just sent the query for execution.
         :param sql: string
         :param vendor: int, mimics enum, representing database vendors: MySQL and PostgreSQL.
@@ -139,8 +147,8 @@ class DBAccess:
             if not client:
                 # Checks if there is an available client.
                 # If the client is not available then it must be requested from the connection pool.
-                client = self.get_db_client(DBVendors.PG) \
-                    if vendor == DBVendors.PG else self.get_db_client(DBVendors.MYSQL)
+                client = DBAccess.get_db_client(conversion, DBVendors.PG) \
+                    if vendor == DBVendors.PG else DBAccess.get_db_client(conversion, DBVendors.MYSQL)
 
             cursor = client.cursor(cursor_factory=RealDictCursor) if vendor == DBVendors.PG else client.cursor()
 
@@ -151,12 +159,12 @@ class DBAccess:
 
             client.commit()
             data = cursor.fetchall()
-            self.__release_db_client_if_necessary(client, should_return_client)
+            DBAccess.__release_db_client_if_necessary(conversion, client, should_return_client)
             return DBAccessQueryResult(client, data, None)
         except psycopg2.ProgrammingError:
             return DBAccessQueryResult(client, [], None)
         except Exception as e:
-            FsOps.generate_error(self.conversion, '\t--[%s] %s' % (caller, e), sql)
+            FsOps.generate_error(conversion, '\t--[%s] %s' % (caller, e), sql)
             if process_exit_on_error:
                 sys.exit(-1)
 
