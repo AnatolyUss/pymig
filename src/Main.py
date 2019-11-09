@@ -22,6 +22,7 @@ from BootProcessor import BootProcessor
 from SchemaProcessor import SchemaProcessor
 from Conversion import Conversion
 from MigrationStateManager import MigrationStateManager
+from StructureLoader import StructureLoader
 
 if __name__ == '__main__':
     print(BootProcessor.get_introduction_message())
@@ -35,3 +36,4 @@ if __name__ == '__main__':
     SchemaProcessor.create_schema(conversion)
     MigrationStateManager.create_state_logs_table(conversion)
     MigrationStateManager.create_data_pool_table(conversion)
+    StructureLoader.load_structure(conversion)
