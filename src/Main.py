@@ -24,6 +24,7 @@ from Conversion import Conversion
 from MigrationStateManager import MigrationStateManager
 
 if __name__ == '__main__':
+    print(BootProcessor.get_introduction_message())
     BASE_DIR = os.getcwd()
     config = FsOps.read_config(BASE_DIR)
     config = FsOps.read_extra_config(config, BASE_DIR)
@@ -33,3 +34,4 @@ if __name__ == '__main__':
     FsOps.read_data_types_map(conversion)
     SchemaProcessor.create_schema(conversion)
     MigrationStateManager.create_state_logs_table(conversion)
+    MigrationStateManager.create_data_pool_table(conversion)

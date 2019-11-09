@@ -32,10 +32,9 @@ class BootProcessor:
         """
         db_access = DBAccess(conversion)
         connection_error_message = BootProcessor.__check_connection(db_access)
-        introduction_message = BootProcessor.__get_introduction_message()
 
         if connection_error_message:
-            error_message = '\t --[BootProcessor::boot] %s \n %s.' % (introduction_message, connection_error_message)
+            error_message = '\t --[BootProcessor::boot] %s.' % connection_error_message
             FsOps.generate_error(conversion, error_message)
             sys.exit(-1)
 
@@ -51,7 +50,6 @@ class BootProcessor:
             else '\n\t--[BootProcessor::boot] PYMIG is ready to start.'
 
         state_message += '\n\t--[BootProcessor::boot] Proceed? [Y/n]\n\t'
-        print(introduction_message)
 
         while True:
             user_input = input(state_message)
@@ -68,7 +66,7 @@ class BootProcessor:
                 print(hint % user_input)
 
     @staticmethod
-    def __get_introduction_message():
+    def get_introduction_message():
         """
         Returns Pymig's introduction message.
         :return: string

@@ -41,7 +41,7 @@ class FsOps:
         :param log_title: string
         :return: None
         """
-        print('--[%s] Creating directory %s...' % (log_title, directory_path))
+        print('\t--[%s] Creating directory %s...' % (log_title, directory_path))
         try:
             os.mkdir(directory_path)
         except FileExistsError:
