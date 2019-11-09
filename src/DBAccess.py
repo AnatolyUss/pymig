@@ -19,7 +19,7 @@ __license__ = """
 import sys
 import pymysql
 import psycopg2
-from psycopg2.extras import DictCursor
+from psycopg2.extras import RealDictCursor
 from DBUtils.PooledDB import PooledDB
 from DBAccessQueryResult import DBAccessQueryResult
 from FsOps import FsOps
@@ -142,7 +142,7 @@ class DBAccess:
                 client = self.get_db_client(DBVendors.PG) \
                     if vendor == DBVendors.PG else self.get_db_client(DBVendors.MYSQL)
 
-            cursor = client.cursor(cursor_factory=DictCursor) if vendor == DBVendors.PG else client.cursor()
+            cursor = client.cursor(cursor_factory=RealDictCursor) if vendor == DBVendors.PG else client.cursor()
 
             if bindings:
                 cursor.execute(sql, bindings)

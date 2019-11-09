@@ -84,10 +84,10 @@ class FsOps:
         :return: None
         """
         print(message)
-        FsOps.write_to_file(conversion.all_logs_path, 'a', message)
+        FsOps.write_to_file(conversion.all_logs_path, 'a', '\n' + message)
 
         if table_log_path:
-            FsOps.write_to_file(table_log_path, 'a', message)
+            FsOps.write_to_file(table_log_path, 'a', '\n' + message)
 
     @staticmethod
     def read_config(base_dir, config_file_name='config.json'):

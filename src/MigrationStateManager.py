@@ -41,8 +41,8 @@ class MigrationStateManager:
         sql = 'SELECT COUNT(1) AS cnt FROM %s' % state_logs_table_name
         result = db_access.query(log_title, sql, DBVendors.PG, True, True, result.client)
         msg = '\t --[%s] Table %s' % (log_title, state_logs_table_name)
-        print(result.data)  # TODO: remove asap.
-        if len(result.data) == 0:
+
+        if result.data[0]['cnt'] == 0:
             sql = 'INSERT INTO %s VALUES (FALSE, FALSE, FALSE, FALSE);' % state_logs_table_name
             db_access.query(log_title, sql, DBVendors.PG, True, False, result.client)
             msg += ' is created.'

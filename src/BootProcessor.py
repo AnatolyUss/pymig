@@ -44,7 +44,7 @@ class BootProcessor:
         WHERE table_schema = '%s' AND table_name = '%s') AS state_logs_table_exist;
         """ % (conversion.schema, conversion.schema + conversion.mysql_db_name)
         result = db_access.query('BootProcessor::boot', sql, DBVendors.PG, True, False)
-        state_logs_table_exist = result.data[0][0]
+        state_logs_table_exist = result.data[0]['state_logs_table_exist']
         state_message = '''\n\t--[BootProcessor::boot] PYMIG is ready to restart after some failure.
         \n\t--[BootProcessor::boot] Consider checking log files at the end of migration.''' \
             if state_logs_table_exist \
