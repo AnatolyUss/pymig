@@ -53,3 +53,24 @@ class ExtraConfigProcessor:
                     return table_dict['name']['original'] if should_get_original else table_dict['name']['new']
 
         return current_table_name
+
+    @staticmethod
+    def parse_foreign_keys(conversion, table_name):
+        """
+        Parses the extra_config foreign_keys attributes and generate an output array
+        required by ForeignKeyProcessor.process_foreign_key_worker.
+        :param conversion: Conversion
+        :param table_name: string
+        :return: list
+        """
+        ret_val = []
+        if conversion.extra_config is not None and 'foreign_keys' in conversion.extra_config:
+            for row in conversion.extra_config['foreign_keys']:
+                if row['table_name'] == table_name:
+                    fk = {}  # There may be several FKs in a single table.
+                    for attr in row:
+                        fk[attr.upper()] = row[attr]
+
+                    ret_val.append(fk)
+
+        return ret_val
