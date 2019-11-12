@@ -48,8 +48,7 @@ class DataChunksProcessor:
         FsOps.log(conversion, msg, log_path)
         meta = '{"_tableName":"%s","_selectFieldList":"%s","_rowsCnt":%d}' % (table_name, select_field_list, rows_cnt)
 
-        sql = 'INSERT INTO "{0}"."data_pool_{0}{1}"("metadata") VALUES ($1);'\
+        sql = 'INSERT INTO "{0}"."data_pool_{0}{1}"("metadata") VALUES (%(meta)s);'\
             .format(conversion.schema, conversion.mysql_db_name)
 
-        # !!!Note, below, the bindings must be passed as a tuple.
-        DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False, None, (meta))
+        DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False, None, {'meta': meta})

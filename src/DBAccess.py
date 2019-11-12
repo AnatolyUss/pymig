@@ -140,7 +140,7 @@ class DBAccess:
         :param process_exit_on_error: boolean, determines should the app terminate on error.
         :param should_return_client: boolean, determines should the client be returned.
         :param client: PooledSharedDBConnection | None
-        :param bindings: tuple | None
+        :param bindings: dict | tuple | None
         :return: DBAccessQueryResult
         """
         cursor, data, error = None, None, None

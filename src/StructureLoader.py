@@ -93,5 +93,6 @@ class StructureLoader:
         if not result.error:
             split_version = result.data[0]['mysql_version'].split('.')
             major_version = split_version[0]
-            minor_version = ''.join(split_version[1:])
+            minor_version_with_postfix = ''.join(split_version[1:])
+            minor_version = minor_version_with_postfix.split('-')[0]
             conversion.mysql_version = '{0}.{1}'.format(major_version, minor_version)

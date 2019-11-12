@@ -16,9 +16,9 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 
+import DBVendors
 from FsOps import FsOps
 from Utils import Utils
-from DBVendors import DBVendors
 from DBAccess import DBAccess
 from ExtraConfigProcessor import ExtraConfigProcessor
 
