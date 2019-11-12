@@ -111,6 +111,7 @@ class DBAccess:
         """
         try:
             client.close()
+            client = None
         except Exception as e:
             FsOps.generate_error(conversion, '\t--[DBAccess::release_db_client] %s' % e)
 
@@ -142,7 +143,7 @@ class DBAccess:
         :param bindings: tuple | None
         :return: DBAccessQueryResult
         """
-        cursor = None
+        cursor, data, error = None, None, None
         try:
             if not client:
                 # Checks if there is an available client.
@@ -159,16 +160,16 @@ class DBAccess:
 
             client.commit()
             data = cursor.fetchall()
-            DBAccess.__release_db_client_if_necessary(conversion, client, should_return_client)
-            return DBAccessQueryResult(client, data, None)
         except psycopg2.ProgrammingError:
-            return DBAccessQueryResult(client, [], None)
+            data = []
         except Exception as e:
+            error = e
             FsOps.generate_error(conversion, '\t--[%s] %s' % (caller, e), sql)
             if process_exit_on_error:
                 sys.exit(-1)
-
-            return DBAccessQueryResult(client, None, e)
         finally:
             if cursor:
                 cursor.close()
+
+            DBAccess.__release_db_client_if_necessary(conversion, client, should_return_client)
+            return DBAccessQueryResult(client, data, error)
