@@ -20,6 +20,8 @@ import DBVendors
 from Utils import Utils
 from Table import Table
 from DBAccess import DBAccess
+from TableProcessor import TableProcessor
+from DataChunksProcessor import DataChunksProcessor
 from ExtraConfigProcessor import ExtraConfigProcessor
 from MigrationStateManager import MigrationStateManager
 
@@ -56,12 +58,26 @@ class StructureLoader:
                 relation_name = ExtraConfigProcessor.get_table_name(conversion, relation_name, False)
                 conversion.tables_to_migrate.append(relation_name)
                 conversion.dic_tables[relation_name] = Table('%s/%s.log' % (conversion.logs_dir_path, relation_name))
-                # TODO: implement following in Python.
-                # processTablePromises.push(processTableBeforeDataLoading(conversion, relationName, haveTablesLoaded));
+
+                # TODO: use multiple threads to create tables in parallel.
+                StructureLoader.process_table_before_data_loading(conversion, relation_name, have_tables_loaded)
+
                 tables_cnt += 1
             elif row['Table_type'] == 'VIEW':
                 conversion.views_to_migrate.append(relation_name)
                 views_cnt += 1
+
+    @staticmethod
+    def process_table_before_data_loading(conversion, table_name, have_data_chunks_processed):
+        """
+        Processes current table before data loading.
+        :param conversion: Conversion
+        :param table_name: string
+        :param have_data_chunks_processed: bool
+        :return: None
+        """
+        TableProcessor.create_table(conversion, table_name)
+        DataChunksProcessor.prepare_data_chunks(conversion, table_name, have_data_chunks_processed)
 
     @staticmethod
     def __get_mysql_version(conversion):
