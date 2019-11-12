@@ -47,6 +47,19 @@ class TableProcessor:
         if conversion.should_migrate_only_data():
             return
 
+        def __get_column_definition(input_dict):
+            col_name = ExtraConfigProcessor.get_column_name(conversion, original_table_name, input_dict['Field'], False)
+            col_type = TableProcessor.map_data_types(conversion.data_types_map, input_dict['Type'])
+            return '"%s" %s' % (col_name, col_type)
+
+        sql_columns = ','.join(list(map(__get_column_definition, show_columns_result.data)))
+        sql_create_table = 'CREATE TABLE IF NOT EXISTS "%s"."%s"(%s);' % (conversion.schema, table_name, sql_columns)
+        create_table_result = DBAccess.query(conversion, log_title, sql_create_table, DBVendors.PG, True, False)
+
+        if not create_table_result.error:
+            success_message = '\t--[%s] Table "%s"."%s" is created.' % (log_title, conversion.schema, table_name)
+            FsOps.log(conversion, success_message, log_path)
+
     @staticmethod
     def map_data_types(data_types_map, mysql_data_type):
         """

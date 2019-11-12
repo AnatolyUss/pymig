@@ -32,6 +32,7 @@ class Conversion:
         self.mysql = None
         self.pg = None
         self.logs_dir_path = self.config['logs_dir_path']
+        self.data_types_map = None
         self.data_types_map_addr = self.config['data_types_map_addr']
         self.all_logs_path = os.path.join(self.logs_dir_path, 'all.log')
         self.error_logs_path = os.path.join(self.logs_dir_path, 'errors-only.log')
