@@ -52,14 +52,14 @@ class StructureLoader:
         for row in result.data:
             relation_name = row['Tables_in_' + conversion.mysql_db_name]
 
-            if row.Table_type == 'BASE TABLE' and Utils.get_index_of(relation_name, conversion.exclude_tables) == -1:
+            if row['Table_type'] == 'BASE TABLE' and Utils.get_index_of(relation_name, conversion.exclude_tables) == -1:
                 relation_name = ExtraConfigProcessor.get_table_name(conversion, relation_name, False)
                 conversion.tables_to_migrate.append(relation_name)
                 conversion.dic_tables[relation_name] = Table('%s/%s.log' % (conversion.logs_dir_path, relation_name))
                 # TODO: implement following in Python.
                 # processTablePromises.push(processTableBeforeDataLoading(conversion, relationName, haveTablesLoaded));
                 tables_cnt += 1
-            elif row.Table_type == 'VIEW':
+            elif row['Table_type'] == 'VIEW':
                 conversion.views_to_migrate.append(relation_name)
                 views_cnt += 1
 
