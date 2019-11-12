@@ -19,15 +19,17 @@ __license__ = """
 
 class Utils:
     @staticmethod
-    def get_index_of(element, elements):
+    def get_index_of(needle, haystack):
         """
-        Returns an index of given element in the list of elements.
-        If the element not found - returns -1.
-        :param element: variable of any type
-        :param elements: list
+        Returns an index of given needle in the haystack.
+        The needle can be a variable of any type.
+        The haystack is either a list or a string.
+        If the needle not found - returns -1.
+        :param needle: variable of any type
+        :param haystack: list or string
         :return: int
         """
         try:
-            return elements.index(element)
+            return haystack.index(needle)
         except ValueError:
             return -1
