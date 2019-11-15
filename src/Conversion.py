@@ -18,6 +18,7 @@ __license__ = """
 
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Conversion:
@@ -61,6 +62,7 @@ class Conversion:
 
         self.migrate_only_data = self.config['migrate_only_data'] if 'migrate_only_data' in self.config else False
         self.delimiter = self.config['delimiter'] if 'delimiter' in self.config else ','
+        self.thread_pool = ThreadPoolExecutor(max_workers=self.max_db_connection_pool_size)
 
     def should_migrate_only_data(self):
         """

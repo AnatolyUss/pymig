@@ -61,6 +61,8 @@ class StructureLoader:
 
                 # TODO: use multiple threads to create tables in parallel.
                 StructureLoader.process_table_before_data_loading(conversion, relation_name, have_tables_loaded)
+                # conversion.thread_pool.submit(StructureLoader.process_table_before_data_loading, conversion,
+                # relation_name, have_tables_loaded)
 
                 tables_cnt += 1
             elif row['Table_type'] == 'VIEW':
