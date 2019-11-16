@@ -19,8 +19,10 @@ __license__ = """
 import DBVendors
 from Utils import Utils
 from Table import Table
+from FsOps import FsOps
 from DBAccess import DBAccess
 from TableProcessor import TableProcessor
+from ConcurrencyManager import ConcurrencyManager
 from DataChunksProcessor import DataChunksProcessor
 from ExtraConfigProcessor import ExtraConfigProcessor
 from MigrationStateManager import MigrationStateManager
@@ -50,6 +52,7 @@ class StructureLoader:
         sql += ';'
         result = DBAccess.query(conversion, log_title, sql, DBVendors.MYSQL, True, False)
         tables_cnt, views_cnt = 0, 0
+        thread_pool_params = []
 
         for row in result.data:
             relation_name = row['Tables_in_' + conversion.mysql_db_name]
@@ -58,16 +61,20 @@ class StructureLoader:
                 relation_name = ExtraConfigProcessor.get_table_name(conversion, relation_name, False)
                 conversion.tables_to_migrate.append(relation_name)
                 conversion.dic_tables[relation_name] = Table('%s/%s.log' % (conversion.logs_dir_path, relation_name))
-
-                # TODO: use multiple threads to create tables in parallel.
-                StructureLoader.process_table_before_data_loading(conversion, relation_name, have_tables_loaded)
-                # conversion.thread_pool.submit(StructureLoader.process_table_before_data_loading, conversion,
-                # relation_name, have_tables_loaded)
-
+                thread_pool_params.append([conversion, relation_name, have_tables_loaded])
                 tables_cnt += 1
             elif row['Table_type'] == 'VIEW':
                 conversion.views_to_migrate.append(relation_name)
                 views_cnt += 1
+
+        ConcurrencyManager.run_in_parallel(conversion, StructureLoader.process_table_before_data_loading,
+                                           thread_pool_params)
+
+        msg = '''\t--[{0}] Source DB structure is loaded...\n\t--[{0}] Tables to migrate: {1}\n
+        \t--[{0}] Views to migrate: {2}'''.format(log_title, tables_cnt, views_cnt)
+
+        FsOps.log(conversion, msg)
+        # MigrationStateManager.set(conversion, 'tables_loaded')
 
     @staticmethod
     def process_table_before_data_loading(conversion, table_name, have_data_chunks_processed):
