@@ -55,6 +55,20 @@ class MigrationStateManager:
         return result.data[0][param]
 
     @staticmethod
+    def set(conversion, *states):
+        """
+        Updates the state-log.
+        :param conversion: Conversion
+        :param states: tuple
+        :return: None
+        """
+        log_title = 'MigrationStateManager::set'
+        table_name = MigrationStateManager.__get_state_logs_table_name(conversion)
+        states_sql = ','.join(map(lambda state: '%s = TRUE' % state, states))
+        sql = 'UPDATE %s SET %s;' % (table_name, states_sql)
+        DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
+
+    @staticmethod
     def create_data_pool_table(conversion):
         """
         Creates the "{schema}"."data_pool_{schema + mysql_db_name}" temporary table.

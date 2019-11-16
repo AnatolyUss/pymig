@@ -71,10 +71,9 @@ class StructureLoader:
                                            thread_pool_params)
 
         msg = '''\t--[{0}] Source DB structure is loaded...\n\t--[{0}] Tables to migrate: {1}\n
-        \t--[{0}] Views to migrate: {2}'''.format(log_title, tables_cnt, views_cnt)
-
+        --[{0}] Views to migrate: {2}'''.format(log_title, tables_cnt, views_cnt)
         FsOps.log(conversion, msg)
-        # MigrationStateManager.set(conversion, 'tables_loaded')
+        MigrationStateManager.set(conversion, 'tables_loaded')
 
     @staticmethod
     def process_table_before_data_loading(conversion, table_name, have_data_chunks_processed):
