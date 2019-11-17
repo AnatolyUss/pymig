@@ -38,4 +38,5 @@ if __name__ == '__main__':
     MigrationStateManager.create_state_logs_table(conversion)
     MigrationStateManager.create_data_pool_table(conversion)
     StructureLoader.load_structure(conversion)
+    MigrationStateManager.read_data_pool(conversion)
     ReportGenerator.generate_report(conversion, 'PYMIG migration is accomplished.')

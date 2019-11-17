@@ -16,6 +16,7 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 
+import json
 import DBVendors
 from DBAccess import DBAccess
 from FsOps import FsOps
@@ -80,6 +81,25 @@ class MigrationStateManager:
         sql = 'CREATE TABLE IF NOT EXISTS %s("id" BIGSERIAL, "metadata" TEXT);' % table_name
         DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
         FsOps.log(conversion, '\t--[%s] table %s is created...' % (log_title, table_name))
+
+    @staticmethod
+    def read_data_pool(conversion):
+        """
+        Reads temporary table ("{schema}"."data_pool_{schema + mysql_db_name}"), and generates data-pool.
+        :param conversion: Conversion
+        :return: None
+        """
+        log_title = 'MigrationStateManager::read_data_pool'
+        table_name = MigrationStateManager.__get_data_pool_table_name(conversion)
+        sql = 'SELECT id AS id, metadata AS metadata FROM %s;' % table_name
+        result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
+
+        for row in result.data:
+            metadata = json.loads(row['metadata'])
+            metadata['_id'] = row['id']
+            conversion.data_pool.append(metadata)
+
+        FsOps.log(conversion, '\t--[%s] Data-Pool is loaded...' % log_title)
 
     @staticmethod
     def create_state_logs_table(conversion):
