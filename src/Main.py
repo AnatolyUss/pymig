@@ -24,6 +24,7 @@ from Conversion import Conversion
 from MigrationStateManager import MigrationStateManager
 from StructureLoader import StructureLoader
 from ReportGenerator import ReportGenerator
+from DataPipeManager import DataPipeManager
 
 if __name__ == '__main__':
     print(BootProcessor.get_introduction_message())
@@ -39,4 +40,5 @@ if __name__ == '__main__':
     MigrationStateManager.create_data_pool_table(conversion)
     StructureLoader.load_structure(conversion)
     MigrationStateManager.read_data_pool(conversion)
+    DataPipeManager.send_data(conversion)
     ReportGenerator.generate_report(conversion, 'PYMIG migration is accomplished.')
