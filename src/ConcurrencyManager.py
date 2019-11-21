@@ -16,26 +16,34 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from FsOps import FsOps
 
 
 class ConcurrencyManager:
     @staticmethod
-    def run_in_parallel(conversion, func, params_list):
+    def run_in_parallel(conversion, func, params_list, is_using_processes=False):
         """
         Runs in parallel given function with different parameter sets.
         :param conversion: Conversion
         :param func: function
         :param params_list: list
+        :param is_using_processes: bool
         :return: list
         """
         parallel_execution_result = []
         number_of_tasks = len(params_list)
-        number_of_threads = number_of_tasks \
-            if number_of_tasks < conversion.max_db_connection_pool_size else conversion.max_db_connection_pool_size
 
-        with ThreadPoolExecutor(max_workers=number_of_threads) as executor:
+        if is_using_processes:
+            pool_executor = ProcessPoolExecutor
+            number_of_workers = min(len(conversion.data_pool), multiprocessing.cpu_count())
+        else:
+            pool_executor = ThreadPoolExecutor
+            number_of_workers = number_of_tasks \
+                if number_of_tasks < conversion.max_db_connection_pool_size else conversion.max_db_connection_pool_size
+
+        with pool_executor(max_workers=number_of_workers) as executor:
             func_results = {executor.submit(func, *params): params for params in params_list}
 
             for future in as_completed(func_results):
