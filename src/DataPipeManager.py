@@ -30,14 +30,18 @@ class DataPipeManager:
         if DataPipeManager.data_pool_processed(conversion):
             return
 
+        params_list = list(map(lambda meta: [conversion, meta], conversion.data_pool))
+        ConcurrencyManager.run_data_pipe(conversion, DataPipeManager.load, params_list)
+
     @staticmethod
-    def load(conversion):
+    def load(conversion, data_pool_item):
         """
         Loads the data using separate process.
         :param conversion: Conversion
+        :param data_pool_item: dict
         :return: None
         """
-        pass
+        return
 
     @staticmethod
     def data_pool_processed(conversion):
