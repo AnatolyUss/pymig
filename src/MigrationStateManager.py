@@ -24,7 +24,7 @@ from FsOps import FsOps
 
 class MigrationStateManager:
     @staticmethod
-    def __get_state_logs_table_name(conversion):
+    def get_state_logs_table_name(conversion):
         """
         Returns state-logs table name.
         :param conversion: Conversion, Pymig configuration object.
@@ -33,7 +33,7 @@ class MigrationStateManager:
         return '"{0}"."state_logs_{0}{1}"'.format(conversion.schema, conversion.mysql_db_name)
 
     @staticmethod
-    def __get_data_pool_table_name(conversion):
+    def get_data_pool_table_name(conversion):
         """
         Returns data-pool table name.
         :param conversion: Conversion, Pymig configuration object.
@@ -50,7 +50,7 @@ class MigrationStateManager:
         :return: Bool
         """
         log_title = 'MigrationStateManager::get'
-        table_name = MigrationStateManager.__get_state_logs_table_name(conversion)
+        table_name = MigrationStateManager.get_state_logs_table_name(conversion)
         sql = 'SELECT %s FROM %s;' % (param, table_name)
         result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
         return result.data[0][param]
@@ -64,7 +64,7 @@ class MigrationStateManager:
         :return: None
         """
         log_title = 'MigrationStateManager::set'
-        table_name = MigrationStateManager.__get_state_logs_table_name(conversion)
+        table_name = MigrationStateManager.get_state_logs_table_name(conversion)
         states_sql = ','.join(map(lambda state: '%s = TRUE' % state, states))
         sql = 'UPDATE %s SET %s;' % (table_name, states_sql)
         DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
@@ -77,7 +77,7 @@ class MigrationStateManager:
         :return: None
         """
         log_title = 'MigrationStateManager::create_data_pool_table'
-        table_name = MigrationStateManager.__get_data_pool_table_name(conversion)
+        table_name = MigrationStateManager.get_data_pool_table_name(conversion)
         sql = 'CREATE TABLE IF NOT EXISTS %s("id" BIGSERIAL, "metadata" TEXT);' % table_name
         DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
         FsOps.log(conversion, '\t--[%s] table %s is created...' % (log_title, table_name))
@@ -90,7 +90,7 @@ class MigrationStateManager:
         :return: None
         """
         log_title = 'MigrationStateManager::read_data_pool'
-        table_name = MigrationStateManager.__get_data_pool_table_name(conversion)
+        table_name = MigrationStateManager.get_data_pool_table_name(conversion)
         sql = 'SELECT id AS id, metadata AS metadata FROM %s;' % table_name
         result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
 
@@ -109,7 +109,7 @@ class MigrationStateManager:
         :return: None
         """
         log_title = 'MigrationStateManager::create_state_logs_table'
-        table_name = MigrationStateManager.__get_state_logs_table_name(conversion)
+        table_name = MigrationStateManager.get_state_logs_table_name(conversion)
         sql = '''
         CREATE TABLE IF NOT EXISTS %s("tables_loaded" BOOLEAN, "per_table_constraints_loaded" BOOLEAN, 
         "foreign_keys_loaded" BOOLEAN, "views_loaded" BOOLEAN);
