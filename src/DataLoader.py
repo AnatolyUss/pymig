@@ -22,6 +22,7 @@ from FsOps import FsOps
 from Conversion import Conversion
 from DBAccess import DBAccess
 from MigrationStateManager import MigrationStateManager
+from ExtraConfigProcessor import ExtraConfigProcessor
 
 
 class DataLoader:
@@ -41,17 +42,15 @@ class DataLoader:
         FsOps.log(conversion, msg)
         is_recovery_mode = DataLoader.data_transferred(conversion, data_pool_item['_id'])
 
-        if not is_recovery_mode:
+        if is_recovery_mode:
+            pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
+            DataLoader.delete_data_pool_item(conversion, data_pool_item['_id'], pg_client)
+        else:
             DataLoader.populate_table_worker(conversion,
                                              data_pool_item['_tableName'],
                                              data_pool_item['_selectFieldList'],
                                              data_pool_item['_rowsCnt'],
                                              data_pool_item['_id'])
-
-            return
-
-        pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
-        DataLoader.delete_data_pool_item(conversion, data_pool_item['_id'], pg_client)
 
     @staticmethod
     def populate_table_worker(conversion, table_name, str_select_field_list, rows_cnt, data_pool_id):
@@ -64,8 +63,12 @@ class DataLoader:
         :param data_pool_id: int
         :return: None
         """
-        # TODO: implement.
-        pass
+        original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
+        sql_retrieve_data = 'SELECT %s FROM `%s`;' % (str_select_field_list, original_table_name)
+        sql_copy_data = 'COPY "%s"."%s" FROM STDIN DELIMITER \'%s\' CSV;' \
+                        % (conversion.schema, table_name, conversion.delimiter)
+
+        # TODO: run unbuffered query against MySQL.
 
     @staticmethod
     def delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role):
@@ -98,6 +101,27 @@ class DataLoader:
         log_title = 'DataLoader::enable_triggers'
         sql = 'SET session_replication_role = %s;' % original_session_replication_role
         DBAccess.query(conversion, log_title, sql, DBVendors.PG, False, False, pg_client)
+
+    @staticmethod
+    def disable_triggers(conversion, pg_client):
+        """
+        Disables all triggers and rules for current database session.
+        !!!DO NOT release the client, it will be released after current data-chunk deletion.
+        :param conversion: Conversion
+        :param pg_client: PooledSharedDBConnection
+        :return: string
+        """
+        sql = 'SHOW session_replication_role;'
+        original_session_replication_role = 'origin'
+        log_title = 'DataLoader::disable_triggers'
+        query_result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, False, True, pg_client)
+
+        if query_result.data:
+            original_session_replication_role = query_result.data[0]['session_replication_role']
+
+        sql = 'SET session_replication_role = replica;'
+        DBAccess.query(conversion, log_title, sql, DBVendors.PG, False, False, query_result.client)
+        return original_session_replication_role
 
     @staticmethod
     def data_transferred(conversion, data_pool_id):
