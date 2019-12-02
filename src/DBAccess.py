@@ -84,6 +84,23 @@ class DBAccess:
             sys.exit(-1)
 
     @staticmethod
+    def get_mysql_unbuffered_client(conversion):
+        """
+        Returns MySQL unbuffered client.
+        :param conversion: Conversion
+        :return: MySQL unbuffered client
+        """
+        db_connection_details = conversion.source_con_string
+        return pymysql.connect(
+            host=db_connection_details['host'],
+            user=db_connection_details['user'],
+            password=db_connection_details['password'],
+            charset=db_connection_details['charset'],
+            cursorclass=pymysql.cursors.SSCursor,
+            db=db_connection_details['database']
+        )
+
+    @staticmethod
     def get_db_client(conversion, db_vendor):
         """
         Obtains PooledSharedDBConnection instance.

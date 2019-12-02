@@ -16,7 +16,11 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 
+import io
+import os
+import threading
 import json
+from werkzeug.contrib.iterio import IterIO
 import DBVendors
 from FsOps import FsOps
 from Conversion import Conversion
@@ -64,11 +68,44 @@ class DataLoader:
         :return: None
         """
         original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
-        sql_retrieve_data = 'SELECT %s FROM `%s`;' % (str_select_field_list, original_table_name)
-        sql_copy_data = 'COPY "%s"."%s" FROM STDIN DELIMITER \'%s\' CSV;' \
-                        % (conversion.schema, table_name, conversion.delimiter)
+        read_file_descriptor, write_file_descriptor = os.pipe()
+        source_data_retrieval_thread = threading.Thread(
+            target=DataLoader.__retrieve_source_data,
+            args=(conversion, str_select_field_list, read_file_descriptor, original_table_name)
+        )
 
-        # TODO: run unbuffered query against MySQL.
+        source_data_retrieval_thread.start()
+        pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
+        pg_cursor = pg_client.cursor()
+        write_stream = os.fdopen(write_file_descriptor, 'w')
+
+        data = io.StringIO()
+        pg_cursor.copy_from(data, '"%s"."%s"' % (conversion.schema, table_name))
+        write_stream.close()  # or deadlock...
+
+        source_data_retrieval_thread.join()
+        # TODO: fix.
+        # TODO: handle possible exceptions.
+
+    @staticmethod
+    def __retrieve_source_data(conversion, str_select_field_list, read_file_descriptor, original_table_name):
+        """
+        TODO: add description.
+        :param conversion: Conversion
+        :param str_select_field_list: string
+        :param read_file_descriptor:
+        :param original_table_name:
+        :return: None
+        """
+        mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
+        mysql_cursor = mysql_client.cursor()
+        sql = 'SELECT %s FROM `%s`;' % (str_select_field_list, original_table_name)
+        mysql_cursor.execute(sql)
+        iterator = mysql_cursor.fetchall_unbuffered()
+        read_stream = os.fdopen(read_file_descriptor, 'r')
+        os.write(read_file_descriptor, IterIO(iterator))
+        mysql_cursor.close()
+        mysql_client.commit()
 
     @staticmethod
     def delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role):
