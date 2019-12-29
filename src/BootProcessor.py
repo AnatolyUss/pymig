@@ -35,7 +35,7 @@ class BootProcessor:
         if connection_error_message:
             error_message = '\t --[BootProcessor::boot] %s.' % connection_error_message
             FsOps.generate_error(conversion, error_message)
-            sys.exit(-1)
+            sys.exit(1)
 
         sql = """
         SELECT EXISTS(SELECT 1 FROM information_schema.tables

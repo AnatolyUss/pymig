@@ -68,6 +68,9 @@ class DataLoader:
         :return: None
         """
         original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
+        DataLoader.__retrieve_source_data(conversion, str_select_field_list, original_table_name, table_name)
+
+        """original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
         read_file_descriptor, write_file_descriptor = os.pipe()
         source_data_retrieval_thread = threading.Thread(
             target=DataLoader.__retrieve_source_data,
@@ -85,10 +88,10 @@ class DataLoader:
 
         source_data_retrieval_thread.join()
         # TODO: fix.
-        # TODO: handle possible exceptions.
+        # TODO: handle possible exceptions."""
 
     @staticmethod
-    def __retrieve_source_data(conversion, str_select_field_list, read_file_descriptor, original_table_name):
+    def __retrieve_source_data(conversion, str_select_field_list, original_table_name, target_table_name):  # , read_file_descriptor
         """
         TODO: add description.
         :param conversion: Conversion
@@ -101,11 +104,45 @@ class DataLoader:
         mysql_cursor = mysql_client.cursor()
         sql = 'SELECT %s FROM `%s`;' % (str_select_field_list, original_table_name)
         mysql_cursor.execute(sql)
-        iterator = mysql_cursor.fetchall_unbuffered()
+        # iterator = mysql_cursor.fetchall_unbuffered()
+        text_stream = None
+
+        pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
+        pg_cursor = pg_client.cursor()
+
+        try:
+            while True:
+                batch = mysql_cursor.fetchmany(1000)
+
+                if len(batch) == 0:
+                    break
+
+                # row = next(iterator)
+                # row = '\n'.join(val[0] for val in batch)
+                row = '\n'.join('\t'.join((str(column) for column in row)) for row in batch)
+                # print(repr(row))  # TODO: remove asap.
+                text_stream = io.StringIO()
+                text_stream.write(row)
+                # self.pg_engine.copy_data(csv_file, loading_schema, table, column_list)
+                pg_cursor.copy_from(text_stream, '"%s"."%s"' % (conversion.schema, target_table_name))
+        finally:
+            if text_stream:
+                text_stream.close()
+
+            if pg_cursor:
+                pg_cursor.close()
+
+            print('DONE')
+
+        """mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
+        mysql_cursor = mysql_client.cursor()
+        sql = 'SELECT %s FROM `%s`;' % (str_select_field_list, original_table_name)
+        mysql_cursor.execute(sql)
+        iterator = mysql_cursor.fetchall_unbuffered()  # #####################################
         read_stream = os.fdopen(read_file_descriptor, 'r')
         os.write(read_file_descriptor, IterIO(iterator))
         mysql_cursor.close()
-        mysql_client.commit()
+        mysql_client.commit()"""
 
     @staticmethod
     def delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role):

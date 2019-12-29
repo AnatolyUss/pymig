@@ -81,7 +81,7 @@ class DBAccess:
                             maxconnections=conversion.max_db_connection_pool_size)
         else:
             FsOps.generate_error(conversion, '\t --[DBAccess::__get_pooled_db] unknown db_vendor %s.' % db_vendor)
-            sys.exit(-1)
+            sys.exit(1)
 
     @staticmethod
     def get_mysql_unbuffered_client(conversion):
@@ -116,7 +116,7 @@ class DBAccess:
             return conversion.mysql.connection(shareable=True)
         else:
             FsOps.generate_error(conversion, '\t --[DBAccess::get_db_client] unknown db_vendor %s.' % db_vendor)
-            sys.exit(-1)
+            sys.exit(1)
 
     @staticmethod
     def release_db_client(conversion, client):
@@ -183,7 +183,7 @@ class DBAccess:
             error = e
             FsOps.generate_error(conversion, '\t--[%s] %s' % (caller, e), sql)
             if process_exit_on_error:
-                sys.exit(-1)
+                sys.exit(1)
         finally:
             if cursor:
                 cursor.close()

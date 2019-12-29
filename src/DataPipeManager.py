@@ -31,7 +31,7 @@ class DataPipeManager:
         if DataPipeManager.data_pool_processed(conversion):
             return
 
-        params_list = list(map(lambda meta: [conversion.config, meta], conversion.data_pool))
+        params_list = [[conversion.config, meta] for meta in conversion.data_pool]
         ConcurrencyManager.run_data_pipe(conversion, DataLoader.load, params_list)
 
     @staticmethod
