@@ -18,6 +18,7 @@ __license__ = """
 
 import io
 import os
+import sys
 import threading
 import json
 from werkzeug.contrib.iterio import IterIO
@@ -70,28 +71,8 @@ class DataLoader:
         original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
         DataLoader.__retrieve_source_data(conversion, str_select_field_list, original_table_name, table_name)
 
-        """original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
-        read_file_descriptor, write_file_descriptor = os.pipe()
-        source_data_retrieval_thread = threading.Thread(
-            target=DataLoader.__retrieve_source_data,
-            args=(conversion, str_select_field_list, read_file_descriptor, original_table_name)
-        )
-
-        source_data_retrieval_thread.start()
-        pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
-        pg_cursor = pg_client.cursor()
-        write_stream = os.fdopen(write_file_descriptor, 'w')
-
-        data = io.StringIO()
-        pg_cursor.copy_from(data, '"%s"."%s"' % (conversion.schema, table_name))
-        write_stream.close()  # or deadlock...
-
-        source_data_retrieval_thread.join()
-        # TODO: fix.
-        # TODO: handle possible exceptions."""
-
     @staticmethod
-    def __retrieve_source_data(conversion, str_select_field_list, original_table_name, target_table_name):  # , read_file_descriptor
+    def __retrieve_source_data(conversion, str_select_field_list, original_table_name, target_table_name):
         """
         TODO: add description.
         :param conversion: Conversion
@@ -104,7 +85,6 @@ class DataLoader:
         mysql_cursor = mysql_client.cursor()
         sql = 'SELECT %s FROM `%s`;' % (str_select_field_list, original_table_name)
         mysql_cursor.execute(sql)
-        # iterator = mysql_cursor.fetchall_unbuffered()
         text_stream = None
 
         pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
@@ -117,20 +97,22 @@ class DataLoader:
                 if len(batch) == 0:
                     break
 
-                # row = next(iterator)
-                # row = '\n'.join(val[0] for val in batch)
-                row = '\n'.join('\t'.join((str(column) for column in row)) for row in batch)
-                # print(repr(row))  # TODO: remove asap.
+                row = '\n'.join('\t'.join('\\N' if column is None else str(column) for column in row) for row in batch)
                 text_stream = io.StringIO()
                 text_stream.write(row)
-                # self.pg_engine.copy_data(csv_file, loading_schema, table, column_list)
+                text_stream.seek(0)
                 pg_cursor.copy_from(text_stream, '"%s"."%s"' % (conversion.schema, target_table_name))
+                pg_client.commit()
         finally:
             if text_stream:
                 text_stream.close()
 
-            if pg_cursor:
-                pg_cursor.close()
+            for cursor in (pg_cursor, mysql_cursor):
+                if cursor:
+                    cursor.close()
+
+            if mysql_client:
+                mysql_client.close()
 
             print('DONE')
 
