@@ -188,5 +188,6 @@ class DBAccess:
             if cursor:
                 cursor.close()
 
+            # Determines if the client (instance of PooledSharedDBConnection) should be released.
             DBAccess.__release_db_client_if_necessary(conversion, client, should_return_client)
             return DBAccessQueryResult(client, data, error)
