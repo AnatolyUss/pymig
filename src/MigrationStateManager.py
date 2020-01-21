@@ -49,10 +49,16 @@ class MigrationStateManager:
         :param param: string, state-log parameter.
         :return: Bool
         """
-        log_title = 'MigrationStateManager::get'
         table_name = MigrationStateManager.get_state_logs_table_name(conversion)
-        sql = 'SELECT %s FROM %s;' % (param, table_name)
-        result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
+        result = DBAccess.query(
+            conversion=conversion,
+            caller='MigrationStateManager::get',
+            sql='SELECT %s FROM %s;' % (param, table_name),
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=False
+        )
+
         return result.data[0][param]
 
     @staticmethod
@@ -63,11 +69,16 @@ class MigrationStateManager:
         :param states: tuple
         :return: None
         """
-        log_title = 'MigrationStateManager::set'
         table_name = MigrationStateManager.get_state_logs_table_name(conversion)
-        states_sql = ','.join(map(lambda state: '%s = TRUE' % state, states))
-        sql = 'UPDATE %s SET %s;' % (table_name, states_sql)
-        DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
+        states_sql = ','.join(['%s = TRUE' % state for state in states])
+        DBAccess.query(
+            conversion=conversion,
+            caller='MigrationStateManager::set',
+            sql='UPDATE %s SET %s;' % (table_name, states_sql),
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=False
+        )
 
     @staticmethod
     def create_data_pool_table(conversion):
@@ -78,8 +89,15 @@ class MigrationStateManager:
         """
         log_title = 'MigrationStateManager::create_data_pool_table'
         table_name = MigrationStateManager.get_data_pool_table_name(conversion)
-        sql = 'CREATE TABLE IF NOT EXISTS %s("id" BIGSERIAL, "metadata" TEXT);' % table_name
-        DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
+        DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql='CREATE TABLE IF NOT EXISTS %s("id" BIGSERIAL, "metadata" TEXT);' % table_name,
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=False
+        )
+
         FsOps.log(conversion, '\t--[%s] table %s is created...' % (log_title, table_name))
 
     @staticmethod
@@ -91,8 +109,14 @@ class MigrationStateManager:
         """
         log_title = 'MigrationStateManager::read_data_pool'
         table_name = MigrationStateManager.get_data_pool_table_name(conversion)
-        sql = 'SELECT id AS id, metadata AS metadata FROM %s;' % table_name
-        result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False)
+        result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql='SELECT id AS id, metadata AS metadata FROM %s;' % table_name,
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=False
+        )
 
         for row in result.data:
             metadata = json.loads(row['metadata'])
@@ -115,14 +139,38 @@ class MigrationStateManager:
         "foreign_keys_loaded" BOOLEAN, "views_loaded" BOOLEAN);
         ''' % table_name
 
-        result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, True)
-        sql = 'SELECT COUNT(1) AS cnt FROM %s' % table_name
-        result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, True, result.client)
+        result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql,
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=True
+        )
+
+        result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql='SELECT COUNT(1) AS cnt FROM %s' % table_name,
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=True,
+            client=result.client
+        )
+
         msg = '\t--[%s] Table %s' % (log_title, table_name)
 
         if result.data[0]['cnt'] == 0:
-            sql = 'INSERT INTO %s VALUES (FALSE, FALSE, FALSE, FALSE);' % table_name
-            DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False, result.client)
+            DBAccess.query(
+                conversion=conversion,
+                caller=log_title,
+                sql='INSERT INTO %s VALUES (FALSE, FALSE, FALSE, FALSE);' % table_name,
+                vendor=DBVendors.PG,
+                process_exit_on_error=True,
+                should_return_client=False,
+                client=result.client
+            )
+
             msg += ' is created.'
         else:
             msg += ' already exists.'

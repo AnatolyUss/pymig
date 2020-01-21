@@ -29,9 +29,22 @@ class SchemaProcessor:
         :return: None
         """
         log_title = 'SchemaProcessor::create_schema'
-        sql = 'SELECT schema_name FROM information_schema.schemata WHERE schema_name = \'%s\';' % conversion.schema
-        result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, True)
+        result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql='SELECT schema_name FROM information_schema.schemata WHERE schema_name = \'%s\';' % conversion.schema,
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=True
+        )
 
         if len(result.data) == 0:
-            sql = 'CREATE SCHEMA "%s";' % conversion.schema
-            DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False, result.client)
+            DBAccess.query(
+                conversion=conversion,
+                caller=log_title,
+                sql='CREATE SCHEMA "%s";' % conversion.schema,
+                vendor=DBVendors.PG,
+                process_exit_on_error=True,
+                should_return_client=False,
+                client=result.client
+            )

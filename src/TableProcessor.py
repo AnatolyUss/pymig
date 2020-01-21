@@ -37,7 +37,14 @@ class TableProcessor:
         FsOps.log(conversion, '\t--[%s] Currently creating table: `%s`' % (log_title, table_name), log_path)
         original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
         sql_show_columns = 'SHOW FULL COLUMNS FROM `%s`;' % original_table_name
-        show_columns_result = DBAccess.query(conversion, log_title, sql_show_columns, DBVendors.MYSQL, False, False)
+        show_columns_result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql_show_columns,
+            vendor=DBVendors.MYSQL,
+            process_exit_on_error=False,
+            should_return_client=False
+        )
 
         if show_columns_result.error:
             return
@@ -53,8 +60,14 @@ class TableProcessor:
             return '"%s" %s' % (col_name, col_type)
 
         sql_columns = ','.join(list(map(__get_column_definition, show_columns_result.data)))
-        sql_create_table = 'CREATE TABLE IF NOT EXISTS "%s"."%s"(%s);' % (conversion.schema, table_name, sql_columns)
-        create_table_result = DBAccess.query(conversion, log_title, sql_create_table, DBVendors.PG, True, False)
+        create_table_result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql='CREATE TABLE IF NOT EXISTS "%s"."%s"(%s);' % (conversion.schema, table_name, sql_columns),
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=False
+        )
 
         if not create_table_result.error:
             success_message = '\t--[%s] Table "%s"."%s" is created.' % (log_title, conversion.schema, table_name)

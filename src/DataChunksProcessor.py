@@ -42,7 +42,16 @@ class DataChunksProcessor:
         select_field_list = ColumnsDataArranger.arrange_columns_data(conversion.dic_tables[table_name].table_columns,
                                                                      conversion.mysql_version)
         sql_rows_cnt = 'SELECT COUNT(1) AS rows_count FROM `%s`;' % original_table_name
-        rows_cnt_result = DBAccess.query(conversion, log_title, sql_rows_cnt, DBVendors.MYSQL, True, False)
+
+        rows_cnt_result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql_rows_cnt,
+            vendor=DBVendors.MYSQL,
+            process_exit_on_error=True,
+            should_return_client=False
+        )
+
         rows_cnt = int(rows_cnt_result.data[0]['rows_count'])
         msg = '\t--[%s] Total rows to insert into "%s"."%s": %d' % (log_title, conversion.schema, table_name, rows_cnt)
         FsOps.log(conversion, msg, log_path)
@@ -51,4 +60,13 @@ class DataChunksProcessor:
         sql = 'INSERT INTO "{0}"."data_pool_{0}{1}"("metadata") VALUES (%(meta)s);'\
             .format(conversion.schema, conversion.mysql_db_name)
 
-        DBAccess.query(conversion, log_title, sql, DBVendors.PG, True, False, None, {'meta': meta})
+        DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql,
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=False,
+            client=None,
+            bindings={'meta': meta}
+        )

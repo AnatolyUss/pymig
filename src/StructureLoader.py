@@ -50,7 +50,16 @@ class StructureLoader:
             sql += ' AND Tables_in_%s NOT IN(%s)' % (conversion.mysql_db_name, exclude_tables)
 
         sql += ';'
-        result = DBAccess.query(conversion, log_title, sql, DBVendors.MYSQL, True, False)
+
+        result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql,
+            vendor=DBVendors.MYSQL,
+            process_exit_on_error=True,
+            should_return_client=False
+        )
+
         tables_cnt, views_cnt = 0, 0
         thread_pool_params = []
 
@@ -94,9 +103,14 @@ class StructureLoader:
         :param conversion: Conversion, Pymig configuration object.
         :return: None
         """
-        log_title = 'StructureLoader::get_mysql_version'
-        sql = 'SELECT VERSION() AS mysql_version;'
-        result = DBAccess.query(conversion, log_title, sql, DBVendors.MYSQL, False, False)
+        result = DBAccess.query(
+            conversion=conversion,
+            caller='StructureLoader::get_mysql_version',
+            sql='SELECT VERSION() AS mysql_version;',
+            vendor=DBVendors.MYSQL,
+            process_exit_on_error=False,
+            should_return_client=False
+        )
 
         if not result.error:
             split_version = result.data[0]['mysql_version'].split('.')

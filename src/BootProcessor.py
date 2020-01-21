@@ -41,7 +41,16 @@ class BootProcessor:
         SELECT EXISTS(SELECT 1 FROM information_schema.tables
         WHERE table_schema = '%s' AND table_name = '%s') AS state_logs_table_exist;
         """ % (conversion.schema, conversion.schema + conversion.mysql_db_name)
-        result = DBAccess.query(conversion, 'BootProcessor::boot', sql, DBVendors.PG, True, False)
+
+        result = DBAccess.query(
+            conversion=conversion,
+            caller='BootProcessor::boot',
+            sql=sql,
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=False
+        )
+
         state_logs_table_exist = result.data[0]['state_logs_table_exist']
         state_message = '''\n\t--[BootProcessor::boot] PYMIG is ready to restart after some failure.
         \n\t--[BootProcessor::boot] Consider checking log files at the end of migration.''' \
@@ -84,8 +93,26 @@ class BootProcessor:
         log_title = 'BootProcessor::check_connection'
         result_message = ''
         sql = 'SELECT 1;'
-        mysql_result = DBAccess.query(conversion, log_title, sql, DBVendors.MYSQL, False, False)
+
+        mysql_result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql,
+            vendor=DBVendors.MYSQL,
+            process_exit_on_error=False,
+            should_return_client=False
+        )
+
         result_message += '	MySQL connection error: %s' % mysql_result.error if mysql_result.error else ''
-        pg_result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, False, False)
+
+        pg_result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql,
+            vendor=DBVendors.PG,
+            process_exit_on_error=False,
+            should_return_client=False
+        )
+
         result_message += '	PostgreSQL connection error: %s' % pg_result.error if pg_result.error else ''
         return result_message

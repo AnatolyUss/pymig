@@ -139,7 +139,16 @@ class DataLoader:
         log_title = 'DataLoader::delete_data_pool_item'
         data_pool_table_name = MigrationStateManager.get_data_pool_table_name(conversion)
         sql = 'DELETE FROM %s WHERE id = %d;' % (data_pool_table_name, data_pool_id)
-        DBAccess.query(conversion, log_title, sql, DBVendors.PG, False, True, pg_client)
+
+        DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql,
+            vendor=DBVendors.PG,
+            process_exit_on_error=False,
+            should_return_client=True,
+            client=pg_client
+        )
 
         if original_session_replication_role:
             DataLoader.enable_triggers(conversion, pg_client, original_session_replication_role)
@@ -154,9 +163,15 @@ class DataLoader:
         :param original_session_replication_role: string
         :return: None
         """
-        log_title = 'DataLoader::enable_triggers'
-        sql = 'SET session_replication_role = %s;' % original_session_replication_role
-        DBAccess.query(conversion, log_title, sql, DBVendors.PG, False, False, pg_client)
+        DBAccess.query(
+            conversion=conversion,
+            caller='DataLoader::enable_triggers',
+            sql='SET session_replication_role = %s;' % original_session_replication_role,
+            vendor=DBVendors.PG,
+            process_exit_on_error=False,
+            should_return_client=False,
+            client=pg_client
+        )
 
     @staticmethod
     def disable_triggers(conversion, pg_client):
@@ -170,13 +185,30 @@ class DataLoader:
         sql = 'SHOW session_replication_role;'
         original_session_replication_role = 'origin'
         log_title = 'DataLoader::disable_triggers'
-        query_result = DBAccess.query(conversion, log_title, sql, DBVendors.PG, False, True, pg_client)
+
+        query_result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql,
+            vendor=DBVendors.PG,
+            process_exit_on_error=False,
+            should_return_client=True,
+            client=pg_client
+        )
 
         if query_result.data:
             original_session_replication_role = query_result.data[0]['session_replication_role']
 
-        sql = 'SET session_replication_role = replica;'
-        DBAccess.query(conversion, log_title, sql, DBVendors.PG, False, False, query_result.client)
+        DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql='SET session_replication_role = replica;',
+            vendor=DBVendors.PG,
+            process_exit_on_error=False,
+            should_return_client=False,
+            client=query_result.client
+        )
+
         return original_session_replication_role
 
     @staticmethod
@@ -192,10 +224,27 @@ class DataLoader:
         """
         log_title = 'DataLoader::data_transferred'
         data_pool_table_name = MigrationStateManager.get_data_pool_table_name(conversion)
-        sql_get_metadata = 'SELECT metadata AS metadata FROM %s WHERE id = %d;' % (data_pool_table_name, data_pool_id)
-        result = DBAccess.query(conversion, log_title, sql_get_metadata, DBVendors.PG, True, True)
+
+        result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql='SELECT metadata AS metadata FROM %s WHERE id = %d;' % (data_pool_table_name, data_pool_id),
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=True
+        )
+
         metadata = json.loads(result.data[0]['metadata'])
         target_table_name = '"%s"."%s"' % (conversion.schema, metadata['_tableName'])
-        sql_get_first_row = 'SELECT * FROM %s LIMIT 1 OFFSET 0;' % target_table_name
-        probe = DBAccess.query(conversion, log_title, sql_get_first_row, DBVendors.PG, True, False, result.client)
+
+        probe = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql='SELECT * FROM %s LIMIT 1 OFFSET 0;' % target_table_name,
+            vendor=DBVendors.PG,
+            process_exit_on_error=True,
+            should_return_client=False,
+            client=result.client
+        )
+
         return len(probe.data) != 0
