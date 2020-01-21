@@ -17,11 +17,7 @@ __license__ = """
 """
 
 import io
-import os
-import sys
-import threading
 import json
-from werkzeug.contrib.iterio import IterIO
 import DBVendors
 from FsOps import FsOps
 from Conversion import Conversion
