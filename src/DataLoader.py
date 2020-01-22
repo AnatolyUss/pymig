@@ -73,8 +73,8 @@ class DataLoader:
         TODO: add description.
         :param conversion: Conversion
         :param str_select_field_list: string
-        :param read_file_descriptor:
-        :param original_table_name:
+        :param original_table_name: string
+        :param target_table_name: string
         :return: None
         """
         mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
@@ -88,7 +88,7 @@ class DataLoader:
 
         try:
             while True:
-                batch = mysql_cursor.fetchmany(1000)
+                batch = mysql_cursor.fetchmany(100000)  # TODO: think about batch size calculation.
 
                 if len(batch) == 0:
                     break
@@ -111,16 +111,6 @@ class DataLoader:
                 mysql_client.close()
 
             print('DONE')
-
-        """mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
-        mysql_cursor = mysql_client.cursor()
-        sql = 'SELECT %s FROM `%s`;' % (str_select_field_list, original_table_name)
-        mysql_cursor.execute(sql)
-        iterator = mysql_cursor.fetchall_unbuffered()  # #####################################
-        read_stream = os.fdopen(read_file_descriptor, 'r')
-        os.write(read_file_descriptor, IterIO(iterator))
-        mysql_cursor.close()
-        mysql_client.commit()"""
 
     @staticmethod
     def delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role):
