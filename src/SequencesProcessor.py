@@ -16,29 +16,6 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 
-from DataLoader import DataLoader
-from ConcurrencyManager import ConcurrencyManager
 
-
-class DataPipeManager:
-    @staticmethod
-    def send_data(conversion):
-        """
-        Runs the data pipe.
-        :param conversion: Conversion
-        :return: None
-        """
-        if DataPipeManager.data_pool_processed(conversion):
-            return
-
-        params_list = [[conversion.config, meta] for meta in conversion.data_pool]
-        ConcurrencyManager.run_data_pipe(conversion, DataLoader.load, params_list)
-
-    @staticmethod
-    def data_pool_processed(conversion):
-        """
-        Checks if all data chunks were processed.
-        :param conversion: Conversion
-        :return: bool
-        """
-        return len(conversion.data_pool) == 0
+class SequencesProcessor:
+    pass

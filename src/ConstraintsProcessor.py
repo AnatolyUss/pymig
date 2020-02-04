@@ -1,7 +1,7 @@
 __author__ = "Anatoly Khaytovich <anatolyuss@gmail.com>"
-__copyright__ = "Copyright (C) 2018 - present, Anatoly Khaytovich <anatolyuss@gmail.com>"
+__copyright__ = "Copyright (C) 2015 - present, Anatoly Khaytovich <anatolyuss@gmail.com>"
 __license__ = """
-    This file is a part of "PYMIG" - the database migration tool.
+    This file is a part of "FromMySqlToPostgreSql" - the database migration tool.
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License.
@@ -29,17 +29,27 @@ class ConstraintsProcessor:
         :return: None
         """
         is_table_constraints_loaded = MigrationStateManager.get(conversion, 'per_table_constraints_loaded')
-        migrate_only_data = conversion.should_migrate_only_data()
-        ConcurrencyManager.run_in_parallel(
-            conversion,
-            ConstraintsProcessor.processConstraintsPerTable,
-            conversion.tables_to_migrate
-        )
+
+        if not is_table_constraints_loaded:
+            params = [[conversion, table_name] for table_name in conversion.tables_to_migrate]
+            ConcurrencyManager.run_in_parallel(conversion, ConstraintsProcessor._processConstraintsPerTable, params)
+
+        # TODO: proceed to foreign keys setting.
 
     @staticmethod
-    def processConstraintsPerTable(table_name):
+    def _processConstraintsPerTable(conversion, table_name):
         """
         Processes given table's constraints.
+        :param conversion: Conversion
         :param table_name: string
         :return: None
         """
+        if conversion.should_migrate_only_data():
+            # return sequencesProcessor.setSequenceValue(conversion, tableName);
+
+        # await processEnum(conversion, tableName);
+        # await processNull(conversion, tableName);
+        # await processDefault(conversion, tableName);
+        # await sequencesProcessor.createSequence(conversion, tableName);
+        # await processIndexAndKey(conversion, tableName);
+        # await processComments(conversion, tableName);
