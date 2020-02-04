@@ -18,4 +18,12 @@ __license__ = """
 
 
 class SequencesProcessor:
-    pass
+    @staticmethod
+    def set_sequence_value(conversion, table_name):
+        """
+        Sets sequence value.
+        :param conversion: Conversion
+        :param table_name: string
+        :return: None
+        """
+        pass
