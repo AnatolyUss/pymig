@@ -18,6 +18,7 @@ __license__ = """
 
 from MigrationStateManager import MigrationStateManager
 from ConcurrencyManager import ConcurrencyManager
+from SequencesProcessor import SequencesProcessor
 
 
 class ConstraintsProcessor:
@@ -45,7 +46,7 @@ class ConstraintsProcessor:
         :return: None
         """
         if conversion.should_migrate_only_data():
-            # return sequencesProcessor.setSequenceValue(conversion, tableName);
+            return SequencesProcessor.set_sequence_value(conversion, table_name)
 
         # await processEnum(conversion, tableName);
         # await processNull(conversion, tableName);

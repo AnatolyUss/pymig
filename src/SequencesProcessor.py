@@ -15,6 +15,10 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from ExtraConfigProcessor import ExtraConfigProcessor
+from DBAccess import DBAccess
+from FsOps import FsOps
+import DBVendors
 
 
 class SequencesProcessor:
@@ -26,4 +30,34 @@ class SequencesProcessor:
         :param table_name: string
         :return: None
         """
-        pass
+        original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
+        table_columns_list = conversion.dic_tables[table_name].table_columns
+        auto_increment_columns = [column for column in table_columns_list if column['Extra'] == 'auto_increment']
+
+        if len(auto_increment_columns) == 0:
+            return  # No auto-incremented column found.
+
+        log_title = 'SequenceProcessor::set_sequence_value'
+        auto_increment_column = auto_increment_columns[0]['Field']
+        column_name = ExtraConfigProcessor.get_column_name(
+            conversion=conversion,
+            original_table_name=original_table_name,
+            current_column_name=auto_increment_column,
+            should_get_original=False
+        )
+
+        seq_name = '%s_%s_seq' % (table_name, column_name)
+        sql = 'SELECT SETVAL(\'"%s"."%s"\',' % (conversion.schema, seq_name)
+        sql += '(SELECT MAX("%s") FROM "%s"."%s"));' % (column_name, conversion.schema, table_name)
+        result = DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql=sql,
+            vendor=DBVendors.PG,
+            process_exit_on_error=False,
+            should_return_client=False
+        )
+
+        if not result.error:
+            msg = '\t--[%s] Sequence "%s"."%s" is created...' % (log_title, conversion.schema, seq_name)
+            FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
