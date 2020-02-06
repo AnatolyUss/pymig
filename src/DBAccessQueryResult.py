@@ -22,7 +22,7 @@ class DBAccessQueryResult:
         """
         Constructor.
         :param client: PooledSharedDBConnection | None
-        :param data: dictionary | None
+        :param data: dict | None
         :param error: Exception | None
         """
         self.client = client

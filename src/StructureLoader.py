@@ -33,11 +33,11 @@ class StructureLoader:
     def load_structure(conversion):
         """
         Loads source tables and views, that need to be migrated.
-        :param conversion: Conversion, Pymig configuration object.
+        :param conversion: Conversion, the configuration object.
         :return: None
         """
         log_title = 'StructureLoader::load_structure'
-        StructureLoader.__get_mysql_version(conversion)
+        StructureLoader._get_mysql_version(conversion)
         have_tables_loaded = MigrationStateManager.get(conversion, 'tables_loaded')
         sql = 'SHOW FULL TABLES IN `%s` WHERE 1 = 1' % conversion.mysql_db_name
 
@@ -89,7 +89,7 @@ class StructureLoader:
         """
         Processes current table before data loading.
         :param conversion: Conversion
-        :param table_name: string
+        :param table_name: str
         :param have_data_chunks_processed: bool
         :return: None
         """
@@ -97,10 +97,10 @@ class StructureLoader:
         DataChunksProcessor.prepare_data_chunks(conversion, table_name, have_data_chunks_processed)
 
     @staticmethod
-    def __get_mysql_version(conversion):
+    def _get_mysql_version(conversion):
         """
         Retrieves the source db version.
-        :param conversion: Conversion, Pymig configuration object.
+        :param conversion: Conversion, the configuration object.
         :return: None
         """
         result = DBAccess.query(

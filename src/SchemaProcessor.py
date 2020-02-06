@@ -25,7 +25,7 @@ class SchemaProcessor:
     def create_schema(conversion):
         """
         Creates a new PostgreSQL schema if it does not exist yet.
-        :param conversion: Conversion, Pymig configuration object.
+        :param conversion: Conversion, the configuration object.
         :return: None
         """
         log_title = 'SchemaProcessor::create_schema'

@@ -21,7 +21,7 @@ class Table:
     def __init__(self, table_log_path):
         """
         Constructor.
-        :param table_log_path: string, a path to a log file, related to the table.
+        :param table_log_path: str, a path to a log file, related to the table.
         """
         self.table_log_path = table_log_path
         self.table_columns = []

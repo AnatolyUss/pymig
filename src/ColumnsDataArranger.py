@@ -25,8 +25,8 @@ class ColumnsDataArranger:
         """
         Arranges columns data before loading.
         :param table_columns: list
-        :param mysql_version: string
-        :return: string
+        :param mysql_version: str
+        :return: str
         """
         ret_val = ''
         wkb_func = 'ST_AsWKB' if float(mysql_version) >= 5.76 else 'AsWKB'
@@ -53,7 +53,7 @@ class ColumnsDataArranger:
     def is_spacial(data_type):
         """
         Defines if given type is one of MySQL spacial types.
-        :param data_type: string
+        :param data_type: str
         :return: bool
         """
         return Utils.get_index_of('geometry', data_type) != -1 \
@@ -65,7 +65,7 @@ class ColumnsDataArranger:
     def is_date_time(data_type):
         """
         Defines if given type is one of MySQL date-time types.
-        :param data_type: string
+        :param data_type: str
         :return: bool
         """
         return Utils.get_index_of('timestamp', data_type) != -1 or Utils.get_index_of('date', data_type) != -1
@@ -74,7 +74,7 @@ class ColumnsDataArranger:
     def is_binary(data_type):
         """
         Defines if given type is one of MySQL binary types.
-        :param data_type: string
+        :param data_type: str
         :return: bool
         """
         return Utils.get_index_of('blob', data_type) != -1 or Utils.get_index_of('binary', data_type) != -1
@@ -83,7 +83,7 @@ class ColumnsDataArranger:
     def is_bit(data_type):
         """
         Defines if given type is one of MySQL bit type.
-        :param data_type: string
+        :param data_type: str
         :return: bool
         """
         return Utils.get_index_of('bit', data_type) != -1

@@ -34,7 +34,7 @@
 
     "max_db_connection_pool_size_description" : [
         "Maximal amount of simultaneous connections to your MySQL and PostgreSQL servers.",
-        "For example: 10 means, that pymig will create a pool of 10 connections to MySQL server",
+        "For example: 10 means, that FromMySqlToPostgreSql will create a pool of 10 connections to MySQL server",
         "and 10 connections to PostgreSQL server.",
         "20 connections to both servers."
     ],
@@ -63,13 +63,13 @@
 
     "exclude_tables_description": [
         "List of tables, that will not be migrated.",
-        "By default, pymig will migrate all tables."
+        "By default, FromMySqlToPostgreSql will migrate all tables."
     ],
     "exclude_tables": [],
 
     "include_tables_description": [
         "List of tables, that will be migrated.",
-        "By default, pymig will migrate all tables."
+        "By default, FromMySqlToPostgreSql will migrate all tables."
     ],
     "include_tables": [],
 

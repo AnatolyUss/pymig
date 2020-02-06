@@ -43,7 +43,7 @@ class ConstraintsProcessor:
         """
         Processes given table's constraints.
         :param conversion: Conversion
-        :param table_name: string
+        :param table_name: str
         :return: None
         """
         if conversion.should_migrate_only_data():

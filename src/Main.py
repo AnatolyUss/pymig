@@ -43,4 +43,4 @@ if __name__ == '__main__':
     MigrationStateManager.read_data_pool(conversion)
     DataPipeManager.send_data(conversion)
     ConstraintsProcessor.processConstraints(conversion)
-    ReportGenerator.generate_report(conversion, 'PYMIG migration is accomplished.')
+    ReportGenerator.generate_report(conversion, 'Migration is accomplished.')

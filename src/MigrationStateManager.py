@@ -27,8 +27,8 @@ class MigrationStateManager:
     def get_state_logs_table_name(conversion):
         """
         Returns state-logs table name.
-        :param conversion: Conversion, Pymig configuration object.
-        :return: string
+        :param conversion: Conversion, the configuration object.
+        :return: str
         """
         return '"{0}"."state_logs_{0}{1}"'.format(conversion.schema, conversion.mysql_db_name)
 
@@ -36,8 +36,8 @@ class MigrationStateManager:
     def get_data_pool_table_name(conversion):
         """
         Returns data-pool table name.
-        :param conversion: Conversion, Pymig configuration object.
-        :return: string
+        :param conversion: Conversion, the configuration object.
+        :return: str
         """
         return '"{0}"."data_pool_{0}{1}"'.format(conversion.schema, conversion.mysql_db_name)
 
@@ -45,9 +45,9 @@ class MigrationStateManager:
     def get(conversion, param):
         """
         Retrieves appropriate state-log.
-        :param conversion: Conversion, Pymig configuration object.
-        :param param: string, state-log parameter.
-        :return: Bool
+        :param conversion: Conversion, the configuration object.
+        :param param: str, state-log parameter.
+        :return: bool
         """
         table_name = MigrationStateManager.get_state_logs_table_name(conversion)
         result = DBAccess.query(
@@ -84,7 +84,7 @@ class MigrationStateManager:
     def create_data_pool_table(conversion):
         """
         Creates the "{schema}"."data_pool_{schema + mysql_db_name}" temporary table.
-        :param conversion: Conversion, Pymig configuration object.
+        :param conversion: Conversion, the configuration object.
         :return: None
         """
         log_title = 'MigrationStateManager::create_data_pool_table'
@@ -129,7 +129,7 @@ class MigrationStateManager:
     def create_state_logs_table(conversion):
         """
         Creates the "{schema}"."state_logs_{schema + mysql_db_name}" temporary table.
-        :param conversion: Conversion, Pymig configuration object.
+        :param conversion: Conversion, the configuration object.
         :return: None
         """
         log_title = 'MigrationStateManager::create_state_logs_table'

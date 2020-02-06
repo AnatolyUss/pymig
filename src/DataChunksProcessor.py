@@ -29,7 +29,7 @@ class DataChunksProcessor:
         """
         Prepares a list of tables metadata.
         :param conversion: Conversion
-        :param table_name: string
+        :param table_name: str
         :param have_data_chunks_processed: bool
         :return: None
         """

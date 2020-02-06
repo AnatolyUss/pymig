@@ -28,8 +28,8 @@ class TableProcessor:
     def create_table(conversion, table_name):
         """
         Migrates structure of a single table to the target server.
-        :param conversion: Conversion, Pymig configuration object.
-        :param table_name: string, A table name.
+        :param conversion: Conversion, the configuration object.
+        :param table_name: str, A table name.
         :return: None
         """
         log_title = 'TableProcessor::create_table'
@@ -54,12 +54,12 @@ class TableProcessor:
         if conversion.should_migrate_only_data():
             return
 
-        def __get_column_definition(input_dict):
+        def _get_column_definition(input_dict):
             col_name = ExtraConfigProcessor.get_column_name(conversion, original_table_name, input_dict['Field'], False)
             col_type = TableProcessor.map_data_types(conversion.data_types_map, input_dict['Type'])
             return '"%s" %s' % (col_name, col_type)
 
-        sql_columns = ','.join(list(map(__get_column_definition, show_columns_result.data)))
+        sql_columns = ','.join(list(map(_get_column_definition, show_columns_result.data)))
         create_table_result = DBAccess.query(
             conversion=conversion,
             caller=log_title,
@@ -80,8 +80,8 @@ class TableProcessor:
         This conversion performs in accordance to mapping rules in './config/data_types_map.json'.
         './config/data_types_map.json' can be customized.
         :param data_types_map: dict
-        :param mysql_data_type: string
-        :return: string
+        :param mysql_data_type: str
+        :return: str
         """
         ret_val = ''
         data_type_details = mysql_data_type.split(' ')

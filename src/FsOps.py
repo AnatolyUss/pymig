@@ -29,16 +29,16 @@ class FsOps:
         :return: None
         """
         logs_title = 'FsOps::create_logs_directory'
-        FsOps.__create_directory(conversion, conversion.logs_dir_path, logs_title)
-        FsOps.__create_directory(conversion, conversion.not_created_views_path, logs_title)
+        FsOps._create_directory(conversion, conversion.logs_dir_path, logs_title)
+        FsOps._create_directory(conversion, conversion.not_created_views_path, logs_title)
 
     @staticmethod
-    def __create_directory(conversion, directory_path, log_title):
+    def _create_directory(conversion, directory_path, log_title):
         """
         Creates a directory at the specified path.
         :param conversion: Conversion, the configuration object.
-        :param directory_path: string
-        :param log_title: string
+        :param directory_path: str
+        :param log_title: str
         :return: None
         """
         print('\t--[%s] Creating directory %s...' % (log_title, directory_path))
@@ -51,9 +51,9 @@ class FsOps:
     def write_to_file(path, mode, message):
         """
         Write a message to specified file.
-        :param path: string, a path to appropriate log file.
-        :param mode: string, a mode in which the file will be used.
-        :param message: string, a message to be logged.
+        :param path: str, a path to appropriate log file.
+        :param mode: str, a mode in which the file will be used.
+        :param message: str, a message to be logged.
         :return: None
         """
         with open(path, mode) as file:
@@ -64,8 +64,8 @@ class FsOps:
         """
         Writes a detailed error message to the "/errors-only.log" file.
         :param conversion: Conversion, the configuration object.
-        :param message: string, an error message.
-        :param sql: string, SQL query that caused an error.
+        :param message: str, an error message.
+        :param sql: str, SQL query that caused an error.
         :return: None
         """
         message += '\n\n\tSQL: %s\n\n' % sql if len(sql) != 0 else ''
@@ -79,8 +79,8 @@ class FsOps:
         Writes given log to the "/all.log" file.
         If necessary, writes given log to the "/{tableName}.log" file.
         :param conversion: Conversion, the configuration object.
-        :param message: string, string to be logged.
-        :param table_log_path: string,  a path to log file of some particular table.
+        :param message: str, string to be logged.
+        :param table_log_path: str,  a path to log file of some particular table.
         :return: None
         """
         print(message)
@@ -93,9 +93,9 @@ class FsOps:
     def read_config(base_dir, config_file_name='config.json'):
         """
         Reads the main configuration file and returns its contents as a dictionary.
-        :param base_dir:  string, app's base directory.
-        :param config_file_name: string, configuration file name.
-        :return: dictionary, configuration as a dictionary.
+        :param base_dir: str, app's base directory.
+        :param config_file_name: str, configuration file name.
+        :return: dict, configuration as a dictionary.
         """
         config = None
         with open(os.path.join(base_dir, 'config', config_file_name), 'r') as file:
@@ -110,9 +110,9 @@ class FsOps:
     def read_extra_config(config, base_dir):
         """
         Reads the extra configuration file, if necessary.
-        :param config: dictionary, contains the main configuration.
-        :param base_dir: string, app's base directory.
-        :return: dictionary, configuration, including extra, as a dictionary.
+        :param config: dict, contains the main configuration.
+        :param base_dir: str, app's base directory.
+        :return: dict, configuration, including extra, as a dictionary.
         """
         if not config['enable_extra_config']:
             config['extra_config'] = None
@@ -129,7 +129,7 @@ class FsOps:
     def read_data_types_map(conversion):
         """
         Reads "./config/data_types_map.json" and converts its json content to js object.
-        :param conversion: Conversion, Pymig configuration object.
+        :param conversion: Conversion, the configuration object.
         :return: None
         """
         with open(conversion.data_types_map_addr, 'r') as file:

@@ -23,10 +23,10 @@ class ExtraConfigProcessor:
         """
         Retrieves appropriate column name.
         :param conversion: Conversion
-        :param original_table_name: string
-        :param current_column_name: string
+        :param original_table_name: str
+        :param current_column_name: str
         :param should_get_original: bool
-        :return: string
+        :return: str
         """
         if conversion.extra_config is not None and 'tables' in conversion.extra_config:
             for table_dict in conversion.extra_config['tables']:
@@ -42,9 +42,9 @@ class ExtraConfigProcessor:
         """
         Retrieves appropriate table name.
         :param conversion: Conversion
-        :param current_table_name: string
+        :param current_table_name: str
         :param should_get_original: bool
-        :return: string
+        :return: str
         """
         if conversion.extra_config is not None and 'tables' in conversion.extra_config:
             for table_dict in conversion.extra_config['tables']:
@@ -60,7 +60,7 @@ class ExtraConfigProcessor:
         Parses the extra_config foreign_keys attributes and generate an output array
         required by ForeignKeyProcessor.process_foreign_key_worker.
         :param conversion: Conversion
-        :param table_name: string
+        :param table_name: str
         :return: list
         """
         ret_val = []

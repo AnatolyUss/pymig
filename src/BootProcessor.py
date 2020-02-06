@@ -30,7 +30,7 @@ class BootProcessor:
         :param conversion: Conversion, the configuration object.
         "return" None
         """
-        connection_error_message = BootProcessor.__check_connection(conversion)
+        connection_error_message = BootProcessor._check_connection(conversion)
 
         if connection_error_message:
             error_message = '\t --[BootProcessor::boot] %s.' % connection_error_message
@@ -52,10 +52,10 @@ class BootProcessor:
         )
 
         state_logs_table_exist = result.data[0]['state_logs_table_exist']
-        state_message = '''\n\t--[BootProcessor::boot] PYMIG is ready to restart after some failure.
+        state_message = '''\n\t--[BootProcessor::boot] FromMySqlToPostgreSql is ready to restart after some failure.
         \n\t--[BootProcessor::boot] Consider checking log files at the end of migration.''' \
             if state_logs_table_exist \
-            else '\n\t--[BootProcessor::boot] PYMIG is ready to start.'
+            else '\n\t--[BootProcessor::boot] FromMySqlToPostgreSql is ready to start.'
 
         state_message += '\n\t--[BootProcessor::boot] Proceed? [Y/n]\n\t'
 
@@ -76,19 +76,19 @@ class BootProcessor:
     @staticmethod
     def get_introduction_message():
         """
-        Returns Pymig's introduction message.
-        :return: string
+        Returns the introduction message.
+        :return: str
         """
-        return '\n\n\tPYMIG - the database migration tool.' \
+        return '\n\n\tFromMySqlToPostgreSql - the database migration tool.' \
                + '\n\tCopyright (C) 2018 - present, Anatoly Khaytovich <anatolyuss@gmail.com>' \
                + '\n\t--[BootProcessor::boot] Configuration has been just loaded.'
 
     @staticmethod
-    def __check_connection(conversion):
+    def _check_connection(conversion):
         """
         Checks correctness of connection details of both MySQL and PostgreSQL.
-        :param conversion: Conversion, Pymig configuration object.
-        :return: string
+        :param conversion: Conversion, the configuration object.
+        :return: str
         """
         log_title = 'BootProcessor::check_connection'
         result_message = ''

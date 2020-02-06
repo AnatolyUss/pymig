@@ -38,7 +38,7 @@ class ConcurrencyManager:
         with ThreadPoolExecutor(max_workers=number_of_workers) as executor:
             func_results = {executor.submit(func, *params): params for params in params_list}
 
-        return ConcurrencyManager.__fill_execution_results(conversion, func_results)
+        return ConcurrencyManager._fill_execution_results(conversion, func_results)
 
     @staticmethod
     def run_data_pipe(conversion, func, params_list):
@@ -58,10 +58,10 @@ class ConcurrencyManager:
                 execution_result = executor.submit(func, *params)
                 func_results.append(execution_result)
 
-        return ConcurrencyManager.__fill_execution_results(conversion, func_results)
+        return ConcurrencyManager._fill_execution_results(conversion, func_results)
 
     @staticmethod
-    def __fill_execution_results(conversion, func_results):
+    def _fill_execution_results(conversion, func_results):
         """
         Fills parallel_execution_result list.
         :param conversion: Conversion

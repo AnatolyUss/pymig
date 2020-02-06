@@ -27,7 +27,7 @@ class ReportGenerator:
         """
         Generates a summary report.
         :param conversion: Conversion
-        :param last_message: string
+        :param last_message: str
         :return: None
         """
         log_title = 'ReportGenerator::generateReport'

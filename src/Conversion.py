@@ -24,7 +24,7 @@ class Conversion:
     def __init__(self, config):
         """
         Constructor.
-        :param config: dictionary, Pymig's configuration.
+        :param config: dictionary, the configuration object.
         """
         self.config = config
         self.source_con_string = self.config['source']
@@ -42,7 +42,7 @@ class Conversion:
         self.include_tables = self.config['include_tables'] if 'include_tables' in self.config else []
         self.encoding = self.config['encoding'] if 'encoding' in self.config else 'utf_8'
         self.time_begin = time.time()
-        self.mysql_version = '5.6.21'  # The oldest MySQL version that tested with PyMig.
+        self.mysql_version = '5.6.21'
         self.extra_config = self.config['extra_config'] if 'extra_config' in self.config else False
         self.tables_to_migrate = []
         self.views_to_migrate = []
@@ -65,6 +65,6 @@ class Conversion:
     def should_migrate_only_data(self):
         """
         Checks if there are actions to take other than data migration.
-        :return: boolean
+        :return: bool
         """
         return self.migrate_only_data

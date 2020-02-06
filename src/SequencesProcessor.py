@@ -28,7 +28,7 @@ class SequencesProcessor:
         Defines which column in given table has the "auto_increment" attribute.
         Creates an appropriate sequence.
         :param conversion: Conversion
-        :param table_name: string
+        :param table_name: str
         :return: None
         """
         original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
@@ -117,7 +117,7 @@ class SequencesProcessor:
         """
         Sets sequence value.
         :param conversion: Conversion
-        :param table_name: string
+        :param table_name: str
         :return: None
         """
         original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)

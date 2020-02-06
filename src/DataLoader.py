@@ -58,23 +58,23 @@ class DataLoader:
         """
         Loads a chunk of data using "PostgreSQL COPY".
         :param conversion: Conversion
-        :param table_name: string
-        :param str_select_field_list: string
+        :param table_name: str
+        :param str_select_field_list: str
         :param rows_cnt: int
         :param data_pool_id: int
         :return: None
         """
         original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
-        DataLoader.__retrieve_source_data(conversion, str_select_field_list, original_table_name, table_name)
+        DataLoader._retrieve_source_data(conversion, str_select_field_list, original_table_name, table_name)
 
     @staticmethod
-    def __retrieve_source_data(conversion, str_select_field_list, original_table_name, target_table_name):
+    def _retrieve_source_data(conversion, str_select_field_list, original_table_name, target_table_name):
         """
         TODO: add description.
         :param conversion: Conversion
-        :param str_select_field_list: string
-        :param original_table_name: string
-        :param target_table_name: string
+        :param str_select_field_list: str
+        :param original_table_name: str
+        :param target_table_name: str
         :return: None
         """
         mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
@@ -119,7 +119,7 @@ class DataLoader:
         :param conversion: Conversion
         :param data_pool_id: int
         :param pg_client: PooledSharedDBConnection
-        :param original_session_replication_role: string | None
+        :param original_session_replication_role: str | None
         :return: None
         """
         log_title = 'DataLoader::delete_data_pool_item'
@@ -146,7 +146,7 @@ class DataLoader:
         !!!DO NOT release the client, it will be released after current data-chunk deletion.
         :param conversion: Conversion
         :param pg_client: PooledSharedDBConnection
-        :param original_session_replication_role: string
+        :param original_session_replication_role: str
         :return: None
         """
         DBAccess.query(
@@ -166,7 +166,7 @@ class DataLoader:
         !!!DO NOT release the client, it will be released after current data-chunk deletion.
         :param conversion: Conversion
         :param pg_client: PooledSharedDBConnection
-        :return: string
+        :return: str
         """
         sql = 'SHOW session_replication_role;'
         original_session_replication_role = 'origin'
@@ -203,7 +203,7 @@ class DataLoader:
         Enforces consistency before processing a chunk of data.
         Ensures there are no data duplications.
         In case of normal execution - it is a good practice.
-        In case of rerunning Pymig after unexpected failure - it is absolutely mandatory.
+        In case of rerunning migration after unexpected failure - it is absolutely mandatory.
         :param conversion: Conversion
         :param data_pool_id: int
         :return: bool
