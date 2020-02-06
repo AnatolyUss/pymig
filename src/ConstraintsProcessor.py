@@ -19,6 +19,7 @@ __license__ = """
 from MigrationStateManager import MigrationStateManager
 from ConcurrencyManager import ConcurrencyManager
 from SequencesProcessor import SequencesProcessor
+from EnumProcessor import EnumProcessor
 
 
 class ConstraintsProcessor:
@@ -48,9 +49,10 @@ class ConstraintsProcessor:
         if conversion.should_migrate_only_data():
             return SequencesProcessor.set_sequence_value(conversion, table_name)
 
-        # await processEnum(conversion, tableName);
+        EnumProcessor.process_enum(conversion, table_name)
         # await processNull(conversion, tableName);
         # await processDefault(conversion, tableName);
+        SequencesProcessor.create_sequence(conversion, table_name)
         # await sequencesProcessor.createSequence(conversion, tableName);
         # await processIndexAndKey(conversion, tableName);
         # await processComments(conversion, tableName);
