@@ -39,9 +39,24 @@ class EnumProcessor:
         params = [
             [conversion, table_name, original_table_name, column]
             for column in conversion.dic_tables[table_name].table_columns
+            if EnumProcessor._is_enum(column)
         ]
 
-        ConcurrencyManager.run_in_parallel(conversion, EnumProcessor._set_enum, params)
+        if len(params) != 0:
+            ConcurrencyManager.run_in_parallel(conversion, EnumProcessor._set_enum, params)
+
+    @staticmethod
+    def _is_enum(column):
+        """
+        Checks if given column is of type enum.
+        :param column: dict
+        :return: bool
+        """
+        if Utils.get_index_of('(', column['Type']) != -1:
+            list_type = column['Type'].split('(')
+            return list_type[0] == 'enum'
+
+        return False
 
     @staticmethod
     def _set_enum(conversion, table_name, original_table_name, column):
@@ -54,31 +69,28 @@ class EnumProcessor:
         :param column: dict
         :return: None
         """
-        if Utils.get_index_of('(', column['Type']) != -1:
-            list_type = column['Type'].split('(')
+        column_name = ExtraConfigProcessor.get_column_name(
+            conversion=conversion,
+            original_table_name=original_table_name,
+            current_column_name=column['Field'],
+            should_get_original=False
+        )
 
-            if list_type[0] == 'enum':
-                column_name = ExtraConfigProcessor.get_column_name(
-                    conversion=conversion,
-                    original_table_name=original_table_name,
-                    current_column_name=column['Field'],
-                    should_get_original=False
-                )
+        enum_values = column['Type'].split('(')[1]  # Exists due to EnumProcessor._is_enum execution result.
+        sql = 'ALTER TABLE "%s"."%s" ADD CHECK ("%s" IN (%s);' \
+              % (conversion.schema, table_name, column_name, enum_values)
 
-                sql = 'ALTER TABLE "%s"."%s" ADD CHECK ("%s" IN (%s);' \
-                      % (conversion.schema, table_name, column_name, list_type[1])
+        result = DBAccess.query(
+            conversion=conversion,
+            caller=__name__,
+            sql=sql,
+            vendor=DBVendors.PG,
+            process_exit_on_error=False,
+            should_return_client=False
+        )
 
-                result = DBAccess.query(
-                    conversion=conversion,
-                    caller=__name__,
-                    sql=sql,
-                    vendor=DBVendors.PG,
-                    process_exit_on_error=False,
-                    should_return_client=False
-                )
+        if not result.error:
+            msg = '\t--[%s] Set "ENUM" for "%s"."%s"."%s"...' \
+                  % (__name__, conversion.schema, table_name, column_name)
 
-                if not result.error:
-                    msg = '\t--[%s] Set "ENUM" for "%s"."%s"."%s"...' \
-                          % (__name__, conversion.schema, table_name, column_name)
-
-                    FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
+            FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
