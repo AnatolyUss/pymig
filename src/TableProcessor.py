@@ -55,11 +55,16 @@ class TableProcessor:
             return
 
         def _get_column_definition(input_dict):
+            """
+            Returns a column definition.
+            :param input_dict: dict
+            :return: str
+            """
             col_name = ExtraConfigProcessor.get_column_name(conversion, original_table_name, input_dict['Field'], False)
             col_type = TableProcessor.map_data_types(conversion.data_types_map, input_dict['Type'])
             return '"%s" %s' % (col_name, col_type)
 
-        sql_columns = ','.join(list(map(_get_column_definition, show_columns_result.data)))
+        sql_columns = ','.join([_get_column_definition(input_dict) for input_dict in show_columns_result.data])
         create_table_result = DBAccess.query(
             conversion=conversion,
             caller=log_title,

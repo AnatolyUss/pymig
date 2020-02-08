@@ -42,11 +42,11 @@ class StructureLoader:
         sql = 'SHOW FULL TABLES IN `%s` WHERE 1 = 1' % conversion.mysql_db_name
 
         if len(conversion.include_tables) != 0:
-            include_tables = ','.join(list(map(lambda table_name: '"%s"' % table_name, conversion.include_tables)))
+            include_tables = ','.join(['"%s"' % table_name for table_name in conversion.include_tables])
             sql += ' AND Tables_in_%s IN(%s)' % (conversion.mysql_db_name, include_tables)
 
         if len(conversion.exclude_tables) != 0:
-            exclude_tables = ','.join(list(map(lambda table_name: '"%s"' % table_name, conversion.exclude_tables)))
+            exclude_tables = ','.join(['"%s"' % table_name for table_name in conversion.exclude_tables])
             sql += ' AND Tables_in_%s NOT IN(%s)' % (conversion.mysql_db_name, exclude_tables)
 
         sql += ';'
