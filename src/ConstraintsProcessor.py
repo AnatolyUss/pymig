@@ -20,6 +20,7 @@ from MigrationStateManager import MigrationStateManager
 from ConcurrencyManager import ConcurrencyManager
 from SequencesProcessor import SequencesProcessor
 from EnumProcessor import EnumProcessor
+from NullProcessor import NullProcessor
 
 
 class ConstraintsProcessor:
@@ -50,9 +51,8 @@ class ConstraintsProcessor:
             return SequencesProcessor.set_sequence_value(conversion, table_name)
 
         EnumProcessor.process_enum(conversion, table_name)
-        # await processNull(conversion, tableName);
+        NullProcessor.process_null(conversion, table_name)
         # await processDefault(conversion, tableName);
         SequencesProcessor.create_sequence(conversion, table_name)
-        # await sequencesProcessor.createSequence(conversion, tableName);
         # await processIndexAndKey(conversion, tableName);
         # await processComments(conversion, tableName);

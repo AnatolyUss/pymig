@@ -15,62 +15,47 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-import DBVendors
-from Utils import Utils
 from FsOps import FsOps
-from DBAccess import DBAccess
 from ExtraConfigProcessor import ExtraConfigProcessor
 from ConcurrencyManager import ConcurrencyManager
+from DBAccess import DBAccess
+import DBVendors
 
 
-class EnumProcessor:
+class NullProcessor:
     @staticmethod
-    def process_enum(conversion, table_name):
+    def process_null(conversion, table_name):
         """
-        Defines which columns of the given table are of type "enum".
-        Sets an appropriate constraint, if appropriate.
+        Defines which columns of the given table can contain the "NULL" value.
+        Sets an appropriate constraint.
         :param conversion: Conversion
         :param table_name: str
         :return: None
         """
-        log_title = 'EnumProcessor::process_enum'
-        msg = '\t--[%s] Defines "ENUMs" for table "%s"."%s"' % (log_title, conversion.schema, table_name)
+        log_title = 'NullProcessor::process_null'
+        msg = '\t--[%s] Sets "NOT NULL" constraints for table: "%s"."%s"' % (log_title, conversion.schema, table_name)
         FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
-        original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
+        original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
         params = [
             [conversion, table_name, original_table_name, column]
             for column in conversion.dic_tables[table_name].table_columns
-            if EnumProcessor._is_enum(column)
+            if column['Null'].lower() == 'no'
         ]
 
         if len(params) != 0:
-            ConcurrencyManager.run_in_parallel(conversion, EnumProcessor._set_enum, params)
+            ConcurrencyManager.run_in_parallel(conversion, NullProcessor._set_not_null, params)
 
     @staticmethod
-    def _is_enum(column):
+    def _set_not_null(conversion, table_name, original_table_name, column):
         """
-        Checks if given column is of type enum.
-        :param column: dict
-        :return: bool
-        """
-        if Utils.get_index_of('(', column['Type']) != -1:
-            list_type = column['Type'].split('(')
-            return list_type[0] == 'enum'
-
-        return False
-
-    @staticmethod
-    def _set_enum(conversion, table_name, original_table_name, column):
-        """
-        Checks if given column is an enum.
-        Sets the enum, if appropriate.
+        Sets the NOT NULL constraint for given column.
         :param conversion: Conversion
         :param table_name: str
         :param original_table_name: str
         :param column: dict
-        :return: None
+        :return: bool
         """
-        log_title = 'EnumProcessor::_set_enum'
+        log_title = 'NullProcessor::_set_not_null'
         column_name = ExtraConfigProcessor.get_column_name(
             conversion=conversion,
             original_table_name=original_table_name,
@@ -78,21 +63,17 @@ class EnumProcessor:
             should_get_original=False
         )
 
-        enum_values = column['Type'].split('(')[1]  # Exists due to EnumProcessor._is_enum execution result.
-        sql = 'ALTER TABLE "%s"."%s" ADD CHECK ("%s" IN (%s);' \
-              % (conversion.schema, table_name, column_name, enum_values)
-
         result = DBAccess.query(
             conversion=conversion,
             caller=log_title,
-            sql=sql,
+            sql='ALTER TABLE "%s"."%s" ALTER COLUMN "%s" SET NOT NULL;' % (conversion.schema, table_name, column_name),
             vendor=DBVendors.PG,
             process_exit_on_error=False,
             should_return_client=False
         )
 
         if not result.error:
-            msg = '\t--[%s] Set "ENUM" for "%s"."%s"."%s"...' \
+            msg = '\t--[%s] Set NOT NULL for "%s"."%s"."%s"...' \
                   % (log_title, conversion.schema, table_name, column_name)
 
             FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
