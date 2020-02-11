@@ -56,32 +56,32 @@ class DBAccess:
         :param db_connection_details: dict
         :return: DBUtils.PooledDB instance
         """
+        connection_details = {
+            'host': db_connection_details['host'],
+            'user': db_connection_details['user'],
+            'password': db_connection_details['password'],
+            'database': db_connection_details['database'],
+            'blocking': True,
+            'maxcached': conversion.max_db_connection_pool_size,
+            'maxconnections': conversion.max_db_connection_pool_size,
+        }
+
         if db_vendor == DBVendors.MYSQL:
-            return PooledDB(creator=pymysql,
-                            host=db_connection_details['host'],
-                            user=db_connection_details['user'],
-                            password=db_connection_details['password'],
-                            database=db_connection_details['database'],
-                            charset=db_connection_details['charset'],
-                            blocking=False,
-                            cursorclass=pymysql.cursors.DictCursor,
-                            maxcached=conversion.max_db_connection_pool_size,
-                            maxshared=conversion.max_db_connection_pool_size,
-                            maxconnections=conversion.max_db_connection_pool_size)
+            connection_details.update({
+                'creator': pymysql,
+                'cursorclass': pymysql.cursors.DictCursor,
+                'charset': db_connection_details['charset'],
+            })
         elif db_vendor == DBVendors.PG:
-            return PooledDB(creator=psycopg2,
-                            host=db_connection_details['host'],
-                            user=db_connection_details['user'],
-                            password=db_connection_details['password'],
-                            database=db_connection_details['database'],
-                            client_encoding=db_connection_details['charset'],
-                            blocking=False,
-                            maxcached=conversion.max_db_connection_pool_size,
-                            maxshared=conversion.max_db_connection_pool_size,
-                            maxconnections=conversion.max_db_connection_pool_size)
+            connection_details.update({
+                'creator': psycopg2,
+                'client_encoding': db_connection_details['charset'],
+            })
         else:
             FsOps.generate_error(conversion, '\t --[DBAccess::_get_pooled_db] unknown db_vendor %s.' % db_vendor)
             sys.exit(1)
+
+        return PooledDB(**connection_details)
 
     @staticmethod
     def get_mysql_unbuffered_client(conversion):
@@ -110,10 +110,10 @@ class DBAccess:
         """
         if db_vendor == DBVendors.PG:
             DBAccess._ensure_pg_connection(conversion)
-            return conversion.pg.connection(shareable=True)
+            return conversion.pg.connection(shareable=False)
         elif db_vendor == DBVendors.MYSQL:
             DBAccess._ensure_mysql_connection(conversion)
-            return conversion.mysql.connection(shareable=True)
+            return conversion.mysql.connection(shareable=False)
         else:
             FsOps.generate_error(conversion, '\t --[DBAccess::get_db_client] unknown db_vendor %s.' % db_vendor)
             sys.exit(1)
