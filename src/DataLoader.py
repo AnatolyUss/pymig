@@ -88,7 +88,7 @@ class DataLoader:
 
         try:
             while True:
-                batch = mysql_cursor.fetchmany(100000)  # TODO: think about batch size calculation.
+                batch = mysql_cursor.fetchmany(50000)  # TODO: think about batch size calculation.
 
                 if len(batch) == 0:
                     break
