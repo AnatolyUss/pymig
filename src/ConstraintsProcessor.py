@@ -21,6 +21,7 @@ from ConcurrencyManager import ConcurrencyManager
 from SequencesProcessor import SequencesProcessor
 from EnumProcessor import EnumProcessor
 from NullProcessor import NullProcessor
+from DefaultProcessor import DefaultProcessor
 
 
 class ConstraintsProcessor:
@@ -52,7 +53,7 @@ class ConstraintsProcessor:
 
         EnumProcessor.process_enum(conversion, table_name)
         NullProcessor.process_null(conversion, table_name)
-        # await processDefault(conversion, tableName);
+        DefaultProcessor.process_default(conversion, table_name)
         SequencesProcessor.create_sequence(conversion, table_name)
         # await processIndexAndKey(conversion, tableName);
         # await processComments(conversion, tableName);
