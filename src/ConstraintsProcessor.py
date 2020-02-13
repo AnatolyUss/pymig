@@ -15,7 +15,7 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-
+from IndexesProcessor import IndexesProcessor
 from MigrationStateManager import MigrationStateManager
 from ConcurrencyManager import ConcurrencyManager
 from SequencesProcessor import SequencesProcessor
@@ -55,5 +55,5 @@ class ConstraintsProcessor:
         NullProcessor.process_null(conversion, table_name)
         DefaultProcessor.process_default(conversion, table_name)
         SequencesProcessor.create_sequence(conversion, table_name)
-        # await processIndexAndKey(conversion, tableName);
+        IndexesProcessor.create_indexes(conversion, table_name)
         # await processComments(conversion, tableName);
