@@ -15,9 +15,7 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-
 import os
-import time
 
 
 class Conversion:
@@ -41,7 +39,7 @@ class Conversion:
         self.exclude_tables = self.config['exclude_tables'] if 'exclude_tables' in self.config else []
         self.include_tables = self.config['include_tables'] if 'include_tables' in self.config else []
         self.encoding = self.config['encoding'] if 'encoding' in self.config else 'utf_8'
-        self.time_begin = time.time()
+        self.time_begin = None
         self.mysql_version = '5.6.21'
         self.extra_config = self.config['extra_config'] if 'extra_config' in self.config else False
         self.tables_to_migrate = []

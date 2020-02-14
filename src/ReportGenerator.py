@@ -39,7 +39,7 @@ class ReportGenerator:
         formatted_hours = '0%d' % hours if hours < 10 else '%d' % hours
         formatted_minutes = '0%d' % minutes if minutes < 10 else '%d' % minutes
         formatted_seconds = '0%d' % seconds if seconds < 10 else '%d' % seconds
-        output = '\t--[{0}] {1}\n\t--[{0}] Total time: {2}:{3}:{4}\n\t--[{0}] (hours:minutes:seconds)'\
+        output = '\n\t--[{0}] {1}\n\t--[{0}] Total time: {2}:{3}:{4}\n\t--[{0}] (hours:minutes:seconds)' \
             .format(log_title, last_message, formatted_hours, formatted_minutes, formatted_seconds)
 
         FsOps.log(conversion, output)

@@ -15,7 +15,7 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-
+import time
 import sys
 import DBVendors
 from FsOps import FsOps
@@ -67,6 +67,7 @@ class BootProcessor:
                 print('\t--[BootProcessor::boot] Migration aborted.\n')
                 sys.exit(0)
             elif user_input == 'Y' or user_input == 'y':
+                conversion.time_begin = time.time()
                 return
             else:
                 hint = '\t--[BootProcessor::boot] Unexpected input %s \n\t--[BootProcessor::boot] ' \
