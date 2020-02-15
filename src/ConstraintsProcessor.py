@@ -23,6 +23,7 @@ from EnumProcessor import EnumProcessor
 from NullProcessor import NullProcessor
 from DefaultProcessor import DefaultProcessor
 from CommentsProcessor import CommentsProcessor
+from ReportGenerator import ReportGenerator
 
 
 class ConstraintsProcessor:
@@ -39,7 +40,22 @@ class ConstraintsProcessor:
             params = [[conversion, table_name] for table_name in conversion.tables_to_migrate]
             ConcurrencyManager.run_in_parallel(conversion, ConstraintsProcessor._process_constraints_per_table, params)
 
-        # TODO: proceed to foreign keys setting.
+        if conversion.should_migrate_only_data():
+            MigrationStateManager.set(conversion, 'per_table_constraints_loaded', 'foreign_keys_loaded', 'views_loaded')
+        else:
+            MigrationStateManager.set(conversion, 'per_table_constraints_loaded')
+            # await processForeignKey(conversion);  # TODO: implement.
+            MigrationStateManager.set(conversion, 'foreign_keys_loaded')
+            # await processViews(conversion);  # TODO: implement.
+            MigrationStateManager.set(conversion, 'views_loaded')
+
+        # Reclaim storage occupied by dead tuples.
+        # await runVacuumFullAndAnalyze(conversion);  # TODO: implement.
+
+        # !!!Note, dropping of data - pool and state - logs tables MUST be the last step of migration process.
+        # await dataPoolManager.dropDataPoolTable(conversion);  # TODO: implement.
+        # await migrationStateManager.dropStateLogsTable(conversion);  # TODO: implement.
+        ReportGenerator.generate_report(conversion, 'Migration is accomplished.')
 
     @staticmethod
     def _process_constraints_per_table(conversion, table_name):
