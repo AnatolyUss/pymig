@@ -15,7 +15,6 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-
 import os
 from FsOps import FsOps
 from BootProcessor import BootProcessor
@@ -29,9 +28,9 @@ from ConstraintsProcessor import ConstraintsProcessor
 
 if __name__ == '__main__':
     print(BootProcessor.get_introduction_message())
-    BASE_DIR = os.getcwd()
-    config = FsOps.read_config(BASE_DIR)
-    config = FsOps.read_extra_config(config, BASE_DIR)
+    base_dir = os.getcwd()
+    config = FsOps.read_config(base_dir)
+    config = FsOps.read_extra_config(config, base_dir)
     conversion = Conversion(config)
     FsOps.create_logs_directory(conversion)
     BootProcessor.boot(conversion)
@@ -42,5 +41,5 @@ if __name__ == '__main__':
     StructureLoader.load_structure(conversion)
     MigrationStateManager.read_data_pool(conversion)
     DataPipeManager.send_data(conversion)
-    ConstraintsProcessor.processConstraints(conversion)
+    ConstraintsProcessor.process_constraints(conversion)
     ReportGenerator.generate_report(conversion, 'Migration is accomplished.')

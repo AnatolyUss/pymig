@@ -22,11 +22,12 @@ from SequencesProcessor import SequencesProcessor
 from EnumProcessor import EnumProcessor
 from NullProcessor import NullProcessor
 from DefaultProcessor import DefaultProcessor
+from CommentsProcessor import CommentsProcessor
 
 
 class ConstraintsProcessor:
     @staticmethod
-    def processConstraints(conversion):
+    def process_constraints(conversion):
         """
         Continues migration process after data loading.
         :param conversion: Conversion
@@ -36,12 +37,12 @@ class ConstraintsProcessor:
 
         if not is_table_constraints_loaded:
             params = [[conversion, table_name] for table_name in conversion.tables_to_migrate]
-            ConcurrencyManager.run_in_parallel(conversion, ConstraintsProcessor._processConstraintsPerTable, params)
+            ConcurrencyManager.run_in_parallel(conversion, ConstraintsProcessor._process_constraints_per_table, params)
 
         # TODO: proceed to foreign keys setting.
 
     @staticmethod
-    def _processConstraintsPerTable(conversion, table_name):
+    def _process_constraints_per_table(conversion, table_name):
         """
         Processes given table's constraints.
         :param conversion: Conversion
@@ -56,4 +57,4 @@ class ConstraintsProcessor:
         DefaultProcessor.process_default(conversion, table_name)
         SequencesProcessor.create_sequence(conversion, table_name)
         IndexesProcessor.create_indexes(conversion, table_name)
-        # await processComments(conversion, tableName);
+        CommentsProcessor.process_comments(conversion, table_name)
