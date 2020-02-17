@@ -23,6 +23,7 @@ from EnumProcessor import EnumProcessor
 from NullProcessor import NullProcessor
 from DefaultProcessor import DefaultProcessor
 from CommentsProcessor import CommentsProcessor
+from VacuumProcessor import VacuumProcessor
 
 
 class ConstraintsProcessor:
@@ -48,8 +49,7 @@ class ConstraintsProcessor:
             # await processViews(conversion);  # TODO: implement.
             MigrationStateManager.set(conversion, 'views_loaded')
 
-        # Reclaim storage occupied by dead tuples.
-        # await runVacuumFullAndAnalyze(conversion);  # TODO: implement.
+        VacuumProcessor.reclaim_storage(conversion)
 
         # !!!Note, dropping of data - pool and state - logs tables MUST be the last step of migration process.
         MigrationStateManager.drop_data_pool_table(conversion)
