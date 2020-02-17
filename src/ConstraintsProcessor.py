@@ -52,7 +52,7 @@ class ConstraintsProcessor:
         # await runVacuumFullAndAnalyze(conversion);  # TODO: implement.
 
         # !!!Note, dropping of data - pool and state - logs tables MUST be the last step of migration process.
-        # await dataPoolManager.dropDataPoolTable(conversion);  # TODO: implement.
+        MigrationStateManager.drop_data_pool_table(conversion)
         MigrationStateManager.drop_state_logs_table(conversion)
 
     @staticmethod

@@ -83,7 +83,7 @@ class MigrationStateManager:
     @staticmethod
     def create_data_pool_table(conversion):
         """
-        Creates the "{schema}"."data_pool_{schema + mysql_db_name}" temporary table.
+        Creates data pool temporary table.
         :param conversion: Conversion, the configuration object.
         :return: None
         """
@@ -99,6 +99,26 @@ class MigrationStateManager:
         )
 
         FsOps.log(conversion, '\t--[%s] table %s is created...' % (log_title, table_name))
+
+    @staticmethod
+    def drop_data_pool_table(conversion):
+        """
+        Drops data pool temporary table.
+        :param conversion: Conversion, the configuration object.
+        :return: None
+        """
+        log_title = 'MigrationStateManager::drop_data_pool_table'
+        table_name = MigrationStateManager.get_data_pool_table_name(conversion)
+        DBAccess.query(
+            conversion=conversion,
+            caller=log_title,
+            sql='DROP TABLE %s;' % table_name,
+            vendor=DBVendors.PG,
+            process_exit_on_error=False,
+            should_return_client=False
+        )
+
+        FsOps.log(conversion, '\t--[%s] table %s is dropped...' % (log_title, table_name))
 
     @staticmethod
     def read_data_pool(conversion):
