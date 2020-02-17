@@ -81,7 +81,7 @@ class BootProcessor:
         :return: str
         """
         return '\n\n\tFromMySqlToPostgreSql - the database migration tool.' \
-               + '\n\tCopyright (C) 2018 - present, Anatoly Khaytovich <anatolyuss@gmail.com>' \
+               + '\n\tCopyright (C) 2015 - present, Anatoly Khaytovich <anatolyuss@gmail.com>' \
                + '\n\t--[BootProcessor::boot] Configuration has been just loaded.'
 
     @staticmethod
