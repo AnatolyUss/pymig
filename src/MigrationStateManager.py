@@ -176,3 +176,19 @@ class MigrationStateManager:
             msg += ' already exists.'
 
         FsOps.log(conversion, msg)
+
+    @staticmethod
+    def drop_state_logs_table(conversion):
+        """
+        Drop state logs temporary table.
+        :param conversion: Conversion
+        :return: None
+        """
+        DBAccess.query(
+            conversion=conversion,
+            caller='MigrationStateManager::drop_state_logs_table',
+            sql='DROP TABLE %s;' % MigrationStateManager.get_state_logs_table_name(conversion),
+            vendor=DBVendors.PG,
+            process_exit_on_error=False,
+            should_return_client=False
+        )

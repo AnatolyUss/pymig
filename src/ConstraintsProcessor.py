@@ -23,7 +23,6 @@ from EnumProcessor import EnumProcessor
 from NullProcessor import NullProcessor
 from DefaultProcessor import DefaultProcessor
 from CommentsProcessor import CommentsProcessor
-from ReportGenerator import ReportGenerator
 
 
 class ConstraintsProcessor:
@@ -54,8 +53,7 @@ class ConstraintsProcessor:
 
         # !!!Note, dropping of data - pool and state - logs tables MUST be the last step of migration process.
         # await dataPoolManager.dropDataPoolTable(conversion);  # TODO: implement.
-        # await migrationStateManager.dropStateLogsTable(conversion);  # TODO: implement.
-        ReportGenerator.generate_report(conversion, 'Migration is accomplished.')
+        MigrationStateManager.drop_state_logs_table(conversion)
 
     @staticmethod
     def _process_constraints_per_table(conversion, table_name):
