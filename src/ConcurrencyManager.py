@@ -32,6 +32,13 @@ class ConcurrencyManager:
         :return: list
         """
         number_of_tasks = len(params_list)
+
+        if number_of_tasks == 0:
+            return []
+
+        if number_of_tasks == 1:
+            return [func(*params_list[0])]
+
         number_of_workers = number_of_tasks \
             if number_of_tasks < conversion.max_db_connection_pool_size else conversion.max_db_connection_pool_size
 

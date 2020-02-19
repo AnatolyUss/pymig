@@ -42,8 +42,7 @@ class NullProcessor:
             if column['Null'].lower() == 'no'
         ]
 
-        if len(params) != 0:
-            ConcurrencyManager.run_in_parallel(conversion, NullProcessor._set_not_null, params)
+        ConcurrencyManager.run_in_parallel(conversion, NullProcessor._set_not_null, params)
 
     @staticmethod
     def _set_not_null(conversion, table_name, original_table_name, column):

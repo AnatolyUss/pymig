@@ -43,8 +43,7 @@ class EnumProcessor:
             if EnumProcessor._is_enum(column)
         ]
 
-        if len(params) != 0:
-            ConcurrencyManager.run_in_parallel(conversion, EnumProcessor._set_enum, params)
+        ConcurrencyManager.run_in_parallel(conversion, EnumProcessor._set_enum, params)
 
     @staticmethod
     def _is_enum(column):

@@ -41,8 +41,7 @@ class VacuumProcessor:
             ) == -1
         ]
 
-        if len(params) != 0:
-            ConcurrencyManager.run_in_parallel(conversion, VacuumProcessor._reclaim_storage_from_table, params)
+        ConcurrencyManager.run_in_parallel(conversion, VacuumProcessor._reclaim_storage_from_table, params)
 
     @staticmethod
     def _reclaim_storage_from_table(conversion, table_name):

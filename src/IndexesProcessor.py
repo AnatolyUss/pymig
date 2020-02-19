@@ -71,8 +71,7 @@ class IndexesProcessor:
             for idx, index_name in enumerate(pg_indexes.keys())
         ]
 
-        if len(params) != 0:
-            ConcurrencyManager.run_in_parallel(conversion, IndexesProcessor._set_index, params)
+        ConcurrencyManager.run_in_parallel(conversion, IndexesProcessor._set_index, params)
 
         msg = '\t--[%s] "%s"."%s": PK/indices are successfully set...' % (log_title, conversion.schema, table_name)
         FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)

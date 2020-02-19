@@ -98,8 +98,7 @@ class CommentsProcessor:
             if column['Comment'] != ''
         ]
 
-        if len(params) != 0:
-            ConcurrencyManager.run_in_parallel(conversion, CommentsProcessor._set_column_comment, params)
+        ConcurrencyManager.run_in_parallel(conversion, CommentsProcessor._set_column_comment, params)
 
     @staticmethod
     def _set_column_comment(conversion, table_name, original_table_name, column):
