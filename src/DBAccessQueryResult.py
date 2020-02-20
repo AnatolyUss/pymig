@@ -21,7 +21,7 @@ class DBAccessQueryResult:
     def __init__(self, client, data, error):
         """
         Constructor.
-        :param client: PooledSharedDBConnection | None
+        :param client: PooledDedicatedDBConnection | None
         :param data: dict | None
         :param error: Exception | None
         """

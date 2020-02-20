@@ -118,7 +118,7 @@ class DataLoader:
         Deletes given record from the data-pool.
         :param conversion: Conversion
         :param data_pool_id: int
-        :param pg_client: PooledSharedDBConnection
+        :param pg_client: PooledDedicatedDBConnection
         :param original_session_replication_role: str | None
         :return: None
         """
@@ -145,7 +145,7 @@ class DataLoader:
         Enables all triggers and rules for current database session.
         !!!DO NOT release the client, it will be released after current data-chunk deletion.
         :param conversion: Conversion
-        :param pg_client: PooledSharedDBConnection
+        :param pg_client: PooledDedicatedDBConnection
         :param original_session_replication_role: str
         :return: None
         """
@@ -165,7 +165,7 @@ class DataLoader:
         Disables all triggers and rules for current database session.
         !!!DO NOT release the client, it will be released after current data-chunk deletion.
         :param conversion: Conversion
-        :param pg_client: PooledSharedDBConnection
+        :param pg_client: PooledDedicatedDBConnection
         :return: str
         """
         sql = 'SHOW session_replication_role;'

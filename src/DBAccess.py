@@ -101,14 +101,17 @@ class DBAccess:
     @staticmethod
     def get_db_client(conversion, db_vendor):
         """
-        Obtains PooledSharedDBConnection instance.
+        Obtains PooledDedicatedDBConnection instance.
         :param conversion: Conversion, the configuration object.
         :param db_vendor: int, mimics enum, representing database vendors: MySQL and PostgreSQL.
-        :return: PooledSharedDBConnection
+        :return: PooledDedicatedDBConnection
         """
         if db_vendor == DBVendors.PG:
             DBAccess._ensure_pg_connection(conversion)
-            return conversion.pg.connection(shareable=False)
+            # return conversion.pg.connection(shareable=False)
+            _return = conversion.pg.connection(shareable=False)
+            print(repr(_return))
+            return _return
         elif db_vendor == DBVendors.MYSQL:
             DBAccess._ensure_mysql_connection(conversion)
             return conversion.mysql.connection(shareable=False)
@@ -121,7 +124,7 @@ class DBAccess:
         """
         Releases MySQL or PostgreSQL connection back to appropriate pool.
         :param conversion: Conversion, the configuration object.
-        :param client: PooledSharedDBConnection
+        :param client: PooledDedicatedDBConnection
         :return: None
         """
         try:
@@ -136,7 +139,7 @@ class DBAccess:
         Checks if there are no more queries to be sent using current client.
         In such case the client should be released.
         :param conversion: Conversion, the configuration object.
-        :param client: PooledSharedDBConnection
+        :param client: PooledDedicatedDBConnection
         :param should_hold_client: bool
         :return: None
         """
@@ -154,7 +157,7 @@ class DBAccess:
         :param vendor: int, mimics enum, representing database vendors: MySQL and PostgreSQL.
         :param process_exit_on_error: bool, determines should the app terminate on error.
         :param should_return_client: bool, determines should the client be returned.
-        :param client: PooledSharedDBConnection | None
+        :param client: PooledDedicatedDBConnection | None
         :param bindings: dict | tuple | None
         :return: DBAccessQueryResult
         """
@@ -185,6 +188,6 @@ class DBAccess:
             if cursor:
                 cursor.close()
 
-            # Determines if the client (instance of PooledSharedDBConnection) should be released.
+            # Determines if the client (instance of PooledDedicatedDBConnection) should be released.
             DBAccess._release_db_client_if_necessary(conversion, client, should_return_client)
             return DBAccessQueryResult(client, data, error)
