@@ -89,14 +89,13 @@ class DBAccess:
         :param conversion: Conversion
         :return: MySQL unbuffered client
         """
-        db_connection_details = conversion.source_con_string
         return pymysql.connect(
-            host=db_connection_details['host'],
-            user=db_connection_details['user'],
-            password=db_connection_details['password'],
-            charset=db_connection_details['charset'],
+            host=conversion.source_con_string['host'],
+            user=conversion.source_con_string['user'],
+            password=conversion.source_con_string['password'],
+            charset=conversion.source_con_string['charset'],
             cursorclass=pymysql.cursors.SSCursor,
-            db=db_connection_details['database']
+            db=conversion.source_con_string['database']
         )
 
     @staticmethod
@@ -164,8 +163,7 @@ class DBAccess:
             if not client:
                 # Checks if there is an available client.
                 # If the client is not available then it must be requested from the connection pool.
-                client = DBAccess.get_db_client(conversion, DBVendors.PG) \
-                    if vendor == DBVendors.PG else DBAccess.get_db_client(conversion, DBVendors.MYSQL)
+                client = DBAccess.get_db_client(conversion, vendor)
 
             cursor = client.cursor(cursor_factory=RealDictCursor) if vendor == DBVendors.PG else client.cursor()
 
