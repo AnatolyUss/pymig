@@ -15,13 +15,11 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-# from psycopg2.extras import RealDictCursor
 from Utils import Utils
 from ExtraConfigProcessor import ExtraConfigProcessor
 from ConcurrencyManager import ConcurrencyManager
 from DBAccess import DBAccess
 from FsOps import FsOps
-import DBVendors
 
 
 class VacuumProcessor:
@@ -56,35 +54,12 @@ class VacuumProcessor:
         msg = '\t--[%s] Running "VACUUM FULL and ANALYZE" query for table %s...' % (log_title, full_table_name)
         FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
         sql = 'VACUUM (FULL, ANALYZE) %s;' % full_table_name
-
-        result = DBAccess.query(
+        run_vacuum_result = DBAccess.query_without_transaction(
             conversion=conversion,
             caller=log_title,
-            sql=sql,
-            vendor=DBVendors.PG,
-            process_exit_on_error=False,
-            should_return_client=False
+            sql=sql
         )
 
-        if not result.error:
+        if not run_vacuum_result.error:
             msg_success = '\t--[%s] Table %s is VACUUMed...' % (log_title, full_table_name)
             FsOps.log(conversion, msg_success, conversion.dic_tables[table_name].table_log_path)
-
-        # pg_client, cursor = None, None
-        #
-        # try:
-        #     pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
-        #     original_isolation_level = pg_client.isolation_level
-        #     pg_client.set_isolation_level(0)  # Sets lowest transaction isolation level.
-        #     cursor = pg_client.cursor(cursor_factory=RealDictCursor)
-        #     cursor.execute(sql)
-        #     pg_client.set_isolation_level(original_isolation_level)
-        #     msg_success = '\t--[%s] Table %s is VACUUMed...' % (log_title, full_table_name)
-        #     FsOps.log(conversion, msg_success, conversion.dic_tables[table_name].table_log_path)
-        # except Exception as e:
-        #     FsOps.generate_error(conversion, '\t--[%s] %s' % (log_title, e), sql)
-        # finally:
-        #     if cursor:
-        #         cursor.close()
-        #
-        #     DBAccess.release_db_client(conversion, pg_client)
