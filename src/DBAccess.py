@@ -56,6 +56,7 @@ class DBAccess:
         :return: DBUtils.PooledDB instance
         """
         connection_details = {
+            'port': db_connection_details['port'],
             'host': db_connection_details['host'],
             'user': db_connection_details['user'],
             'password': db_connection_details['password'],
@@ -83,6 +84,20 @@ class DBAccess:
         return PooledDB(**connection_details)
 
     @staticmethod
+    def close_connection_pools(conversion):
+        """
+        Close both connection-pools.
+        :param conversion: Conversion
+        :return: None
+        """
+        for pool in (conversion.mysql, conversion.pg):
+            if pool:
+                try:
+                    pool.close()
+                except Exception as e:
+                    FsOps.generate_error(conversion, '\t--[DBAccess::close_connection_pools] %s' % e)
+
+    @staticmethod
     def get_mysql_unbuffered_client(conversion):
         """
         Returns MySQL unbuffered client.
@@ -90,6 +105,7 @@ class DBAccess:
         :return: MySQL unbuffered client
         """
         return pymysql.connect(
+            port=conversion.source_con_string['port'],
             host=conversion.source_con_string['host'],
             user=conversion.source_con_string['user'],
             password=conversion.source_con_string['password'],
@@ -108,10 +124,7 @@ class DBAccess:
         """
         if db_vendor == DBVendors.PG:
             DBAccess._ensure_pg_connection(conversion)
-            # return conversion.pg.connection(shareable=False)
-            _return = conversion.pg.connection(shareable=False)
-            print(repr(_return))
-            return _return
+            return conversion.pg.connection(shareable=False)
         elif db_vendor == DBVendors.MYSQL:
             DBAccess._ensure_mysql_connection(conversion)
             return conversion.mysql.connection(shareable=False)
@@ -127,11 +140,12 @@ class DBAccess:
         :param client: PooledDedicatedDBConnection
         :return: None
         """
-        try:
-            client.close()
-            client = None
-        except Exception as e:
-            FsOps.generate_error(conversion, '\t--[DBAccess::release_db_client] %s' % e)
+        if client:
+            try:
+                client.close()
+                client = None
+            except Exception as e:
+                FsOps.generate_error(conversion, '\t--[DBAccess::release_db_client] %s' % e)
 
     @staticmethod
     def _release_db_client_if_necessary(conversion, client, should_hold_client):
@@ -162,6 +176,7 @@ class DBAccess:
         :return: DBAccessQueryResult
         """
         cursor, data, error = None, None, None
+
         try:
             if not client:
                 # Checks if there is an available client.
@@ -191,3 +206,38 @@ class DBAccess:
             # Determines if the client (instance of PooledDedicatedDBConnection) should be released.
             DBAccess._release_db_client_if_necessary(conversion, client, should_return_client)
             return DBAccessQueryResult(client, data, error)
+
+    @staticmethod
+    def query_without_transaction(conversion, caller, sql):
+        """
+        Sends given query to the target PostgreSQL database without wrapping it with transaction.
+        :param conversion: Conversion, the configuration object.
+        :param caller: str, a name of the function, that has just sent the query for execution.
+        :param sql: str
+        :return: DBAccessQueryResult
+        """
+        client, cursor, error = None, None, None
+
+        try:
+            connection_details = {
+                'port': conversion.target_con_string['port'],
+                'host': conversion.target_con_string['host'],
+                'user': conversion.target_con_string['user'],
+                'password': conversion.target_con_string['password'],
+                'database': conversion.target_con_string['database'],
+                'client_encoding': conversion.target_con_string['charset'],
+            }
+
+            client = psycopg2.connect(**connection_details)
+            client.set_isolation_level(0)
+            cursor = client.cursor()
+            cursor.execute(sql)
+        except Exception as e:
+            error = e
+            FsOps.generate_error(conversion, '\t--[%s] %s' % (caller, e), sql)
+        finally:
+            if cursor:
+                cursor.close()
+
+        DBAccess.release_db_client(conversion, client)
+        return DBAccessQueryResult(None, None, error)
