@@ -39,8 +39,7 @@ class ConcurrencyManager:
         if number_of_tasks == 1:
             return [func(*params_list[0])]
 
-        number_of_workers = number_of_tasks \
-            if number_of_tasks < conversion.max_db_connection_pool_size else conversion.max_db_connection_pool_size
+        number_of_workers = min(number_of_tasks, conversion.max_db_connection_pool_size)
 
         with ThreadPoolExecutor(max_workers=number_of_workers) as executor:
             func_results = {executor.submit(func, *params): params for params in params_list}
