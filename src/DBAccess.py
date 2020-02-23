@@ -86,7 +86,7 @@ class DBAccess:
     @staticmethod
     def close_connection_pools(conversion):
         """
-        Close both connection-pools.
+        Closes both connection-pools.
         :param conversion: Conversion
         :return: None
         """
