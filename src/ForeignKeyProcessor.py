@@ -27,7 +27,7 @@ class ForeignKeyProcessor:
     @staticmethod
     def set_foreign_keys(conversion):
         """
-        TODO: add description.
+        Starts a process of foreign keys migration.
         :param conversion: Conversion
         :return: None
         """
@@ -37,17 +37,17 @@ class ForeignKeyProcessor:
             return
 
         params = [[conversion, table_name] for table_name in conversion.tables_to_migrate]
-        ConcurrencyManager.run_in_parallel(conversion, ForeignKeyProcessor._set_foreign_key_for_table, params)
+        ConcurrencyManager.run_in_parallel(conversion, ForeignKeyProcessor._get_foreign_keys_metadata, params)
 
     @staticmethod
-    def _set_foreign_key_for_table(conversion, table_name):
+    def _get_foreign_keys_metadata(conversion, table_name):
         """
-        TODO: add description.
+        Retrieves foreign keys metadata.
         :param conversion: Conversion
         :param table_name: str
         :return: None
         """
-        log_title = 'ForeignKeyProcessor::_set_foreign_key_for_table'
+        log_title = 'ForeignKeyProcessor::_get_foreign_keys_metadata'
         msg = '\t--[%s] Search foreign keys for table "%s"."%s"...' % (log_title, conversion.schema, table_name)
         FsOps.log(conversion, msg)
         sql = """
@@ -91,14 +91,14 @@ class ForeignKeyProcessor:
 
         extra_rows = ExtraConfigProcessor.parse_foreign_keys(conversion, table_name)
         full_rows = (result.data or []) + extra_rows
-        # await processForeignKeyWorker(conversion, tableName, fullRows);
+        ForeignKeyProcessor._set_foreign_keys_for_given_table(conversion, table_name, full_rows)
         msg = '\t--[%s] Foreign keys for table "%s"."%s" are set...' % (log_title, conversion.schema, table_name)
         FsOps.log(conversion, msg)
 
     @staticmethod
-    def _set_foreign_key(conversion, table_name, rows):
+    def _set_foreign_keys_for_given_table(conversion, table_name, rows):
         """
-        TODO: add description.
+        Sets foreign keys for given table.
         :param conversion: Conversion
         :param table_name: str
         :param rows: list
@@ -155,7 +155,7 @@ class ForeignKeyProcessor:
     @staticmethod
     def _set_single_foreign_key(conversion, constraints, foreign_key, table_name):
         """
-        TODO: add description.
+        Creates a single foreign key.
         :param conversion: Conversion
         :param constraints: dict
         :param foreign_key: dict
@@ -163,20 +163,16 @@ class ForeignKeyProcessor:
         :return: None
         """
         log_title = 'ForeignKeyProcessor::_set_single_foreign_key'
-        sql = '''
-            ALTER TABLE "{0}"."{1}" ADD FOREIGN KEY ({2}})
-            REFERENCES "{0}"."{3}"({4})
-            ON UPDATE {5}
-            ON DELETE {6};
-        '''.format(
-            conversion.schema,
-            table_name,
-            ','.join(constraints[foreign_key]['column_name']),
-            constraints[foreign_key]['referenced_table_name'],
-            ','.join(constraints[foreign_key]['referenced_column_name']),
-            constraints[foreign_key]['update_rule'],
-            constraints[foreign_key]['delete_rule']
-        )
+        sql = 'ALTER TABLE "{0}"."{1}" ADD FOREIGN KEY ({2}) REFERENCES "{0}"."{3}"({4}) ON UPDATE {5} ON DELETE {6};'\
+            .format(
+                conversion.schema,
+                table_name,
+                ','.join(constraints[foreign_key]['column_name']),
+                constraints[foreign_key]['referenced_table_name'],
+                ','.join(constraints[foreign_key]['referenced_column_name']),
+                constraints[foreign_key]['update_rule'],
+                constraints[foreign_key]['delete_rule']
+            )
 
         DBAccess.query(
             conversion=conversion,
