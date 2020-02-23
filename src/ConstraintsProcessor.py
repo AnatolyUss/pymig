@@ -25,6 +25,7 @@ from DefaultProcessor import DefaultProcessor
 from CommentsProcessor import CommentsProcessor
 from VacuumProcessor import VacuumProcessor
 from ForeignKeyProcessor import ForeignKeyProcessor
+from ViewGenerator import ViewGenerator
 
 
 class ConstraintsProcessor:
@@ -47,7 +48,7 @@ class ConstraintsProcessor:
             MigrationStateManager.set(conversion, 'per_table_constraints_loaded')
             ForeignKeyProcessor.set_foreign_keys(conversion)
             MigrationStateManager.set(conversion, 'foreign_keys_loaded')
-            # await processViews(conversion);  # TODO: implement.
+            ViewGenerator.generate_views(conversion)
             MigrationStateManager.set(conversion, 'views_loaded')
 
         VacuumProcessor.reclaim_storage(conversion)
