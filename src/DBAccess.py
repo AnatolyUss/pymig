@@ -161,7 +161,17 @@ class DBAccess:
             DBAccess.release_db_client(conversion, client)
 
     @staticmethod
-    def query(conversion, caller, sql, vendor, process_exit_on_error, should_return_client, client=None, bindings=None):
+    def query(
+        conversion,
+        caller,
+        sql,
+        vendor,
+        process_exit_on_error,
+        should_return_client,
+        client=None,
+        bindings=None,
+        should_return_programming_error=False
+    ):
         """
         Sends given SQL query to specified DB.
         Performs appropriate actions (requesting/releasing client) against target connections pool.
@@ -173,6 +183,7 @@ class DBAccess:
         :param should_return_client: bool, determines should the client be returned.
         :param client: PooledDedicatedDBConnection | None
         :param bindings: dict | tuple | None
+        :param should_return_programming_error: bool
         :return: DBAccessQueryResult
         """
         cursor, data, error = None, None, None
@@ -192,11 +203,19 @@ class DBAccess:
 
             client.commit()
             data = cursor.fetchall()
-        except psycopg2.ProgrammingError:
+        except psycopg2.ProgrammingError as pe:
+            if should_return_programming_error:
+                error = pe
+                FsOps.generate_error(conversion, '\t--[%s] %s' % (caller, pe), sql)
+
+                if process_exit_on_error:
+                    sys.exit(1)
+
             data = []
         except Exception as e:
             error = e
             FsOps.generate_error(conversion, '\t--[%s] %s' % (caller, e), sql)
+
             if process_exit_on_error:
                 sys.exit(1)
         finally:

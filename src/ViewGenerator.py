@@ -73,6 +73,7 @@ class ViewGenerator:
             vendor=DBVendors.PG,
             process_exit_on_error=False,
             should_return_client=False,
+            should_return_programming_error=True,
             sql=create_pg_view_sql
         )
 
