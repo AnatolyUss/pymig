@@ -110,8 +110,8 @@ class DBAccess:
             user=conversion.source_con_string['user'],
             password=conversion.source_con_string['password'],
             charset=conversion.source_con_string['charset'],
-            cursorclass=pymysql.cursors.SSCursor,
-            db=conversion.source_con_string['database']
+            db=conversion.source_con_string['database'],
+            cursorclass=pymysql.cursors.SSCursor
         )
 
     @staticmethod

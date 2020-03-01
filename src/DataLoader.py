@@ -15,7 +15,6 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-
 import io
 import json
 import DBVendors
@@ -46,12 +45,15 @@ class DataLoader:
         if is_recovery_mode:
             pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
             DataLoader.delete_data_pool_item(conversion, data_pool_item['_id'], pg_client)
-        else:
-            DataLoader.populate_table_worker(conversion,
-                                             data_pool_item['_tableName'],
-                                             data_pool_item['_selectFieldList'],
-                                             data_pool_item['_rowsCnt'],
-                                             data_pool_item['_id'])
+            return
+
+        DataLoader.populate_table_worker(
+            conversion,
+            data_pool_item['_tableName'],
+            data_pool_item['_selectFieldList'],
+            data_pool_item['_rowsCnt'],
+            data_pool_item['_id']
+        )
 
     @staticmethod
     def populate_table_worker(conversion, table_name, str_select_field_list, rows_cnt, data_pool_id):
@@ -64,41 +66,47 @@ class DataLoader:
         :param data_pool_id: int
         :return: None
         """
-        original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
-        DataLoader._retrieve_source_data(conversion, str_select_field_list, original_table_name, table_name)
+        log_title = 'DataLoader::populate_table_worker'
+        pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
+        pg_cursor = pg_client.cursor()
+        original_session_replication_role = None
 
-    @staticmethod
-    def _retrieve_source_data(conversion, str_select_field_list, original_table_name, target_table_name):
-        """
-        TODO: add description.
-        :param conversion: Conversion
-        :param str_select_field_list: str
-        :param original_table_name: str
-        :param target_table_name: str
-        :return: None
-        """
+        if conversion.should_migrate_only_data():
+            original_session_replication_role = DataLoader.disable_triggers(conversion, pg_client)
+
+        original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
         mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
         mysql_cursor = mysql_client.cursor()
         sql = 'SELECT %s FROM `%s`;' % (str_select_field_list, original_table_name)
         mysql_cursor.execute(sql)
         text_stream = None
 
-        pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
-        pg_cursor = pg_client.cursor()
-
         try:
-            while True:
-                batch = mysql_cursor.fetchmany(50000)  # TODO: think about batch size calculation.
+            number_of_inserted_rows = 0
 
-                if len(batch) == 0:
+            while True:
+                batch_size = 50000  # TODO: think about batch size calculation.
+                batch = mysql_cursor.fetchmany(batch_size)
+                rows_to_insert = len(batch)
+
+                if rows_to_insert == 0:
                     break
 
                 row = '\n'.join('\t'.join('\\N' if column is None else str(column) for column in row) for row in batch)
                 text_stream = io.StringIO()
                 text_stream.write(row)
                 text_stream.seek(0)
-                pg_cursor.copy_from(text_stream, '"%s"."%s"' % (conversion.schema, target_table_name))
+                pg_cursor.copy_from(text_stream, '"%s"."%s"' % (conversion.schema, table_name))
                 pg_client.commit()
+
+                number_of_inserted_rows += rows_to_insert
+                msg = '\t--[{0}] For now inserted: {4} rows, Total rows to insert into "{2}"."{3}": {1}' \
+                    .format(log_title, rows_cnt, conversion.schema, table_name, number_of_inserted_rows)
+
+                FsOps.log(conversion, msg)
+        except Exception as e:
+            msg = 'Data retrieved by following MySQL query has been rejected by the target PostgreSQL server.'
+            FsOps.generate_error(conversion, '\t--[{0}] {1}\n\t--[{0}] {2}'.format(log_title, e, msg), sql)
         finally:
             if text_stream:
                 text_stream.close()
@@ -110,7 +118,7 @@ class DataLoader:
             if mysql_client:
                 mysql_client.close()
 
-            print('DONE')
+            DataLoader.delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role)
 
     @staticmethod
     def delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role):
@@ -126,7 +134,7 @@ class DataLoader:
         data_pool_table_name = MigrationStateManager.get_data_pool_table_name(conversion)
         sql = 'DELETE FROM %s WHERE id = %d;' % (data_pool_table_name, data_pool_id)
 
-        DBAccess.query(
+        result = DBAccess.query(
             conversion=conversion,
             caller=log_title,
             sql=sql,
@@ -136,8 +144,8 @@ class DataLoader:
             client=pg_client
         )
 
-        if original_session_replication_role:
-            DataLoader.enable_triggers(conversion, pg_client, original_session_replication_role)
+        if original_session_replication_role and result.client:
+            DataLoader.enable_triggers(conversion, result.client, original_session_replication_role)
 
     @staticmethod
     def enable_triggers(conversion, pg_client, original_session_replication_role):
