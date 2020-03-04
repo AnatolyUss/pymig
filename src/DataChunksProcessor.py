@@ -15,7 +15,7 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-
+import json
 import DBVendors
 from FsOps import FsOps
 from DBAccess import DBAccess
@@ -39,14 +39,16 @@ class DataChunksProcessor:
         log_title = 'DataChunksProcessor::prepare_data_chunks'
         log_path = conversion.dic_tables[table_name].table_log_path
         original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
-        select_field_list = ColumnsDataArranger.arrange_columns_data(conversion.dic_tables[table_name].table_columns,
-                                                                     conversion.mysql_version)
-        sql_rows_cnt = 'SELECT COUNT(1) AS rows_count FROM `%s`;' % original_table_name
+
+        select_field_list = ColumnsDataArranger.arrange_columns_data(
+            conversion.dic_tables[table_name].table_columns,
+            conversion.mysql_version
+        )
 
         rows_cnt_result = DBAccess.query(
             conversion=conversion,
             caller=log_title,
-            sql=sql_rows_cnt,
+            sql='SELECT COUNT(1) AS rows_count FROM `%s`;' % original_table_name,
             vendor=DBVendors.MYSQL,
             process_exit_on_error=True,
             should_return_client=False
@@ -55,9 +57,14 @@ class DataChunksProcessor:
         rows_cnt = int(rows_cnt_result.data[0]['rows_count'])
         msg = '\t--[%s] Total rows to insert into "%s"."%s": %d' % (log_title, conversion.schema, table_name, rows_cnt)
         FsOps.log(conversion, msg, log_path)
-        meta = '{"_tableName":"%s","_selectFieldList":"%s","_rowsCnt":%d}' % (table_name, select_field_list, rows_cnt)
 
-        sql = 'INSERT INTO "{0}"."data_pool_{0}{1}"("metadata") VALUES (%(meta)s);'\
+        meta = {
+            '_tableName': table_name,
+            '_selectFieldList': select_field_list,
+            '_rowsCnt': rows_cnt,
+        }
+
+        sql = 'INSERT INTO "{0}"."data_pool_{0}{1}"("metadata") VALUES (%(meta)s);' \
             .format(conversion.schema, conversion.mysql_db_name)
 
         DBAccess.query(
@@ -68,5 +75,5 @@ class DataChunksProcessor:
             process_exit_on_error=True,
             should_return_client=False,
             client=None,
-            bindings={'meta': meta}
+            bindings={'meta': json.dumps(meta)}
         )

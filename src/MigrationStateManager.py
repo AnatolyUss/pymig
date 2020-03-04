@@ -15,8 +15,6 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-
-import json
 import DBVendors
 from DBAccess import DBAccess
 from FsOps import FsOps
@@ -92,7 +90,7 @@ class MigrationStateManager:
         DBAccess.query(
             conversion=conversion,
             caller=log_title,
-            sql='CREATE TABLE IF NOT EXISTS %s("id" BIGSERIAL, "metadata" TEXT);' % table_name,
+            sql='CREATE TABLE IF NOT EXISTS %s("id" BIGSERIAL, "metadata" JSON);' % table_name,
             vendor=DBVendors.PG,
             process_exit_on_error=True,
             should_return_client=False
@@ -139,7 +137,7 @@ class MigrationStateManager:
         )
 
         for row in result.data:
-            metadata = json.loads(row['metadata'])
+            metadata = row['metadata']
             metadata['_id'] = row['id']
             conversion.data_pool.append(metadata)
 

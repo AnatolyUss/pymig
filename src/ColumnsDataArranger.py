@@ -20,6 +20,15 @@ from Utils import Utils
 
 class ColumnsDataArranger:
     @staticmethod
+    def prepare_batch_for_copy(batch):
+        """
+        Prepares a batch of records retrieved from MySQL to be copied to PostgreSQL.
+        :param batch: list
+        :return: str
+        """
+        return '\n'.join(['\t'.join(record) for record in batch])
+
+    @staticmethod
     def arrange_columns_data(table_columns, mysql_version):
         """
         Arranges columns data before loading.
@@ -27,7 +36,7 @@ class ColumnsDataArranger:
         :param mysql_version: str
         :return: str
         """
-        ret_val = ''
+        select_field_list = ''
         wkb_func = 'ST_AsWKB' if float(mysql_version) >= 5.76 else 'AsWKB'
 
         for column in table_columns:
@@ -35,18 +44,36 @@ class ColumnsDataArranger:
 
             if ColumnsDataArranger.is_spacial(col_type):
                 # Apply HEX(ST_AsWKB(...)) due to the issue, described at https://bugs.mysql.com/bug.php?id=69798
-                ret_val += 'HEX({0}(`{1}`)) AS `{1}`,'.format(wkb_func, col_field)
+                select_field_list += 'IFNULL(CONCAT(\'\\x\', HEX({0}(`{1}`))), \'\\\\N\') AS `{1}`,' \
+                    .format(wkb_func, col_field)
             elif ColumnsDataArranger.is_binary(col_type):
-                ret_val += 'HEX(`{0}`) AS `{0}`,'.format(col_field)
+                select_field_list += 'IFNULL(CONCAT(\'\\x\', HEX(`{0}`)), \'\\\\N\') AS `{0}`,'.format(col_field)
             elif ColumnsDataArranger.is_bit(col_type):
-                ret_val += 'BIN(`{0}`) AS `{0}`,'.format(col_field)
+                select_field_list += 'IFNULL(CONCAT("B'", BIN(`{0}`), "'"), \'\\\\N\') AS `{0}`,'.format(col_field)
             elif ColumnsDataArranger.is_date_time(col_type):
-                ret_val += "IF(`{0}` IN('0000-00-00', '0000-00-00 00:00:00'),".format(col_field) \
-                        + " '-INFINITY', CAST(`{0}` AS CHAR)) AS `{0}`,".format(col_field)
+                select_field_list += "IF(`{0}` IN('0000-00-00', '0000-00-00 00:00:00'),".format(col_field) \
+                        + " '-INFINITY', IFNULL(CAST(`{0}` AS CHAR), '\\\\N')) AS `{0}`,".format(col_field)
+            elif ColumnsDataArranger.is_numeric(col_type):
+                select_field_list += 'IFNULL(CAST(`{0}` AS CHAR), \'\\\\N\') AS `{0}`,'.format(col_field)
             else:
-                ret_val += '`{0}` AS `{0}`,'.format(col_field)
+                # Escape tab and newline characters as they are used for formatting the data for COPY.
+                escaped = 'IFNULL(REPLACE(REPLACE(`{0}`, \'\\t\', \'\\\\t\'), \'\\n\', \'\\\\n\'), \'\\\\N\') AS `{0}`,'
+                select_field_list += escaped.format(col_field)
 
-        return ret_val[0:-1]
+        return select_field_list[0:-1]
+
+    @staticmethod
+    def is_numeric(data_type):
+        """
+        Defines if given type is one of MySQL numeric types.
+        :param data_type: str
+        :return: bool
+        """
+        return Utils.get_index_of('decimal', data_type) != -1 \
+            or Utils.get_index_of('numeric', data_type) != -1 \
+            or Utils.get_index_of('double', data_type) != -1 \
+            or Utils.get_index_of('float', data_type) != -1 \
+            or (Utils.get_index_of('int', data_type) != -1 and data_type != 'point')
 
     @staticmethod
     def is_spacial(data_type):

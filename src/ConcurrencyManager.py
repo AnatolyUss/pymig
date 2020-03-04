@@ -15,7 +15,6 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from FsOps import FsOps
@@ -55,8 +54,12 @@ class ConcurrencyManager:
         :param params_list: list
         :return: None
         """
-        number_of_workers = min(len(conversion.data_pool), multiprocessing.cpu_count())
         func_results = []
+
+        if len(params_list) == 0:
+            return func_results
+
+        number_of_workers = min(len(conversion.data_pool), multiprocessing.cpu_count())
 
         with ProcessPoolExecutor(max_workers=number_of_workers) as executor:
             while len(params_list) != 0:

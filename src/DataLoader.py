@@ -16,25 +16,36 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import io
-import json
 import DBVendors
 from FsOps import FsOps
 from Conversion import Conversion
 from DBAccess import DBAccess
 from MigrationStateManager import MigrationStateManager
 from ExtraConfigProcessor import ExtraConfigProcessor
+from ColumnsDataArranger import ColumnsDataArranger
+from ConcurrencyManager import ConcurrencyManager
 
 
 class DataLoader:
     @staticmethod
-    def load(config, data_pool_item):
+    def send_data(conversion):
+        """
+        Sends the data to the loader process.
+        :param conversion: Conversion
+        :return: None
+        """
+        params_list = [[conversion.config, meta] for meta in conversion.data_pool]
+        ConcurrencyManager.run_data_pipe(conversion, DataLoader._load, params_list)
+
+    @staticmethod
+    def _load(config, data_pool_item):
         """
         Loads the data using separate process.
         :param config: dict
         :param data_pool_item: dict
         :return: None
         """
-        log_title = 'DataLoader::load'
+        log_title = 'DataLoader::_load'
         conversion = Conversion(config)
         msg = '\t--[%s] Loading the data into "%s"."%s" table...' \
               % (log_title, conversion.schema, data_pool_item['_tableName'])
@@ -92,9 +103,9 @@ class DataLoader:
                 if rows_to_insert == 0:
                     break
 
-                row = '\n'.join('\t'.join('\\N' if column is None else str(column) for column in row) for row in batch)
+                rows = ColumnsDataArranger.prepare_batch_for_copy(batch)
                 text_stream = io.StringIO()
-                text_stream.write(row)
+                text_stream.write(rows)
                 text_stream.seek(0)
                 pg_cursor.copy_from(text_stream, '"%s"."%s"' % (conversion.schema, table_name))
                 pg_client.commit()
@@ -228,7 +239,7 @@ class DataLoader:
             should_return_client=True
         )
 
-        metadata = json.loads(result.data[0]['metadata'])
+        metadata = result.data[0]['metadata']
         target_table_name = '"%s"."%s"' % (conversion.schema, metadata['_tableName'])
 
         probe = DBAccess.query(
