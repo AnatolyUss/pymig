@@ -26,6 +26,8 @@ from ReportGenerator import ReportGenerator
 from DataLoader import DataLoader
 from ConstraintsProcessor import ConstraintsProcessor
 from DBAccess import DBAccess
+from BinaryDataDecoder import BinaryDataDecoder
+
 
 if __name__ == '__main__':
     print(BootProcessor.get_introduction_message())
@@ -42,6 +44,7 @@ if __name__ == '__main__':
     StructureLoader.load_structure(conversion)
     MigrationStateManager.read_data_pool(conversion)
     DataLoader.send_data(conversion)
+    BinaryDataDecoder.decode(conversion)
     ConstraintsProcessor.process_constraints(conversion)
     DBAccess.close_connection_pools(conversion)
     ReportGenerator.generate_report(conversion, 'Migration is accomplished.')
