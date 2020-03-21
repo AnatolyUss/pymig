@@ -54,10 +54,14 @@ class ColumnsDataArranger:
                 select_field_list += "IF(`{0}` IN('0000-00-00', '0000-00-00 00:00:00'),".format(col_field) \
                         + " '-INFINITY', IFNULL(CAST(`{0}` AS CHAR), '\\\\N')) AS `{0}`,".format(col_field)
             elif ColumnsDataArranger.is_numeric(col_type):
-                select_field_list += 'IFNULL(CAST(`{0}` AS CHAR), \'\\\\N\') AS `{0}`,'.format(col_field)
+                select_field_list += "IFNULL(CAST(`{0}` AS CHAR), '\\\\N') AS `{0}`,".format(col_field)
             else:
                 # Escape tab and newline characters as they are used for formatting the data for COPY.
-                escaped = 'IFNULL(REPLACE(REPLACE(`{0}`, \'\\t\', \'\\\\t\'), \'\\n\', \'\\\\n\'), \'\\\\N\') AS `{0}`,'
+                # escaped = "IFNULL(REPLACE(REPLACE(`{0}`, '\\t', '\\\\t'), '\\n', '\\\\n'), '\\\\N') AS `{0}`,"
+                escaped = "IFNULL(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(`{0}`, '\\b', '\\\\b')," \
+                    + " '\\n', '\\\\n'), '\\t', '\\\\t'), '\\f', '\\\\f'), '\\r', '\\\\r'), '\\v', '\\\\v')," \
+                    + "  '\\\\N') AS `{0}`,"
+
                 select_field_list += escaped.format(col_field)
 
         return select_field_list[0:-1]
