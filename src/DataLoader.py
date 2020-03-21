@@ -56,15 +56,14 @@ class DataLoader:
         if is_recovery_mode:
             pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
             DataLoader.delete_data_pool_item(conversion, data_pool_item['_id'], pg_client)
-            return
-
-        DataLoader.populate_table_worker(
-            conversion,
-            data_pool_item['_tableName'],
-            data_pool_item['_selectFieldList'],
-            data_pool_item['_rowsCnt'],
-            data_pool_item['_id']
-        )
+        else:
+            DataLoader.populate_table_worker(
+                conversion,
+                data_pool_item['_tableName'],
+                data_pool_item['_selectFieldList'],
+                data_pool_item['_rowsCnt'],
+                data_pool_item['_id']
+            )
 
     @staticmethod
     def populate_table_worker(conversion, table_name, str_select_field_list, rows_cnt, data_pool_id):
@@ -78,21 +77,25 @@ class DataLoader:
         :return: None
         """
         log_title = 'DataLoader::populate_table_worker'
-        pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
-        pg_cursor = pg_client.cursor()
-        original_session_replication_role = None
-
-        if conversion.should_migrate_only_data():
-            original_session_replication_role = DataLoader.disable_triggers(conversion, pg_client)
-
         original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
-        mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
-        mysql_cursor = mysql_client.cursor()
         sql = 'SELECT %s FROM `%s`;' % (str_select_field_list, original_table_name)
-        mysql_cursor.execute(sql)
+        original_session_replication_role = None
         text_stream = None
+        pg_cursor = None
+        pg_client = None
+        mysql_cursor = None
+        mysql_client = None
 
         try:
+            pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
+            pg_cursor = pg_client.cursor()
+
+            if conversion.should_migrate_only_data():
+                original_session_replication_role = DataLoader.disable_triggers(conversion, pg_client)
+
+            mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
+            mysql_cursor = mysql_client.cursor()
+            mysql_cursor.execute(sql)
             number_of_inserted_rows = 0
 
             while True:
@@ -119,15 +122,9 @@ class DataLoader:
             msg = 'Data retrieved by following MySQL query has been rejected by the target PostgreSQL server.'
             FsOps.generate_error(conversion, '\t--[{0}] {1}\n\t--[{0}] {2}'.format(log_title, e, msg), sql)
         finally:
-            if text_stream:
-                text_stream.close()
-
-            for cursor in (pg_cursor, mysql_cursor):
-                if cursor:
-                    cursor.close()
-
-            if mysql_client:
-                mysql_client.close()
+            for resource in (text_stream, pg_cursor, mysql_cursor, mysql_client):
+                if resource:
+                    resource.close()
 
             DataLoader.delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role)
 
