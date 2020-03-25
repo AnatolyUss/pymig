@@ -49,8 +49,8 @@ class Conversion:
         self.mysql_db_name = self.source_con_string['database']
         self.schema = self.config['schema'] if 'schema' in self.config else self.mysql_db_name
 
-        self.max_db_connection_pool_size = self.config['max_db_connection_pool_size'] \
-            if 'max_db_connection_pool_size' in self.config else 10
+        self.max_each_db_connection_pool_size = self.config['max_each_db_connection_pool_size'] \
+            if 'max_each_db_connection_pool_size' in self.config else 30
 
         self.runs_in_test_mode = False
 

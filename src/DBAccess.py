@@ -62,8 +62,8 @@ class DBAccess:
             'password': db_connection_details['password'],
             'database': db_connection_details['database'],
             'blocking': True,
-            'maxcached': conversion.max_db_connection_pool_size,
-            'maxconnections': conversion.max_db_connection_pool_size,
+            'maxcached': conversion.max_each_db_connection_pool_size,
+            'maxconnections': conversion.max_each_db_connection_pool_size,
         }
 
         if db_vendor == DBVendors.MYSQL:
