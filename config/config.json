@@ -34,11 +34,11 @@
 
     "max_each_db_connection_pool_size_description" : [
         "Maximal amount of simultaneous connections to your MySQL and PostgreSQL servers each.",
-        "Example: 30 means, that FromMySqlToPostgreSql will create a pool of 30 connections to the source MySQL server",
-        "and 30 connections to PostgreSQL server.",
-        "60 connections to both servers."
+        "Example: 20 means, that FromMySqlToPostgreSql will create a pool of 20 connections to the source MySQL server",
+        "and 20 connections to PostgreSQL server.",
+        "40 connections to both servers."
     ],
-    "max_each_db_connection_pool_size" : 30,
+    "max_each_db_connection_pool_size" : 20,
 
     "encoding_description" : [
         "Python encoding type.",

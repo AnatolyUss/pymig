@@ -59,7 +59,11 @@ class ConcurrencyManager:
         if len(params_list) == 0:
             return func_results
 
-        number_of_workers = min(len(conversion.data_pool), multiprocessing.cpu_count())
+        number_of_workers = min(
+            conversion.max_each_db_connection_pool_size,
+            len(conversion.data_pool),
+            multiprocessing.cpu_count()
+        )
 
         with ProcessPoolExecutor(max_workers=number_of_workers) as executor:
             while len(params_list) != 0:
