@@ -15,8 +15,7 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-import multiprocessing
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from FsOps import FsOps
 
 
@@ -42,34 +41,6 @@ class ConcurrencyManager:
 
         with ThreadPoolExecutor(max_workers=number_of_workers) as executor:
             func_results = {executor.submit(func, *params): params for params in params_list}
-
-        return ConcurrencyManager._fill_execution_results(conversion, func_results)
-
-    @staticmethod
-    def run_data_pipe(conversion, func, params_list):
-        """
-        Runs the data-pipe.
-        :param conversion: Conversion
-        :param func: function
-        :param params_list: list
-        :return: None
-        """
-        func_results = []
-
-        if len(params_list) == 0:
-            return func_results
-
-        number_of_workers = min(
-            conversion.max_each_db_connection_pool_size,
-            len(conversion.data_pool),
-            multiprocessing.cpu_count()
-        )
-
-        with ProcessPoolExecutor(max_workers=number_of_workers) as executor:
-            while len(params_list) != 0:
-                params = params_list.pop()
-                execution_result = executor.submit(func, *params)
-                func_results.append(execution_result)
 
         return ConcurrencyManager._fill_execution_results(conversion, func_results)
 

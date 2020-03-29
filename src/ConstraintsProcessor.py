@@ -40,7 +40,7 @@ class ConstraintsProcessor:
 
         if not is_table_constraints_loaded:
             params = [[conversion, table_name] for table_name in conversion.tables_to_migrate]
-            ConcurrencyManager.run_in_parallel(conversion, ConstraintsProcessor._process_constraints_per_table, params)
+            ConcurrencyManager.run_in_parallel(conversion, ConstraintsProcessor.process_constraints_per_table, params)
 
         if conversion.should_migrate_only_data():
             MigrationStateManager.set(conversion, 'per_table_constraints_loaded', 'foreign_keys_loaded', 'views_loaded')
@@ -58,7 +58,7 @@ class ConstraintsProcessor:
         MigrationStateManager.drop_state_logs_table(conversion)
 
     @staticmethod
-    def _process_constraints_per_table(conversion, table_name):
+    def process_constraints_per_table(conversion, table_name):
         """
         Processes given table's constraints.
         :param conversion: Conversion

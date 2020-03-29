@@ -16,6 +16,8 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import io
+from multiprocessing import cpu_count, connection, Pipe
+from concurrent.futures import ProcessPoolExecutor
 import DBVendors
 from FsOps import FsOps
 from Conversion import Conversion
@@ -23,26 +25,67 @@ from DBAccess import DBAccess
 from MigrationStateManager import MigrationStateManager
 from ExtraConfigProcessor import ExtraConfigProcessor
 from ColumnsDataArranger import ColumnsDataArranger
-from ConcurrencyManager import ConcurrencyManager
+from ConstraintsProcessor import ConstraintsProcessor
 
 
 class DataLoader:
     @staticmethod
     def send_data(conversion):
         """
-        Sends the data to the loader process.
+        Sends the data to the loader processes.
         :param conversion: Conversion
         :return: None
         """
+        if len(conversion.data_pool) == 0:
+            return
+
         params_list = [[conversion.config, meta] for meta in conversion.data_pool]
-        ConcurrencyManager.run_data_pipe(conversion, DataLoader._load, params_list)
+        DataLoader._run_data_pipe(conversion, DataLoader._load, params_list)
 
     @staticmethod
-    def _load(config, data_pool_item):
+    def _run_data_pipe(conversion, func, params_list):
+        """
+        Runs the data-pipe.
+        :param conversion: Conversion
+        :param func: function
+        :param params_list: list
+        :return: None
+        """
+        reader_connections = []
+        number_of_workers = min(
+            conversion.max_each_db_connection_pool_size,
+            len(conversion.data_pool),
+            cpu_count()
+        )
+
+        with ProcessPoolExecutor(max_workers=number_of_workers) as executor:
+            while len(params_list) != 0:
+                reader_connection, writer_connection = Pipe(duplex=False)
+                reader_connections.append(reader_connection)
+                params = params_list.pop()
+                params.append(writer_connection)
+                executor.submit(func, *params)
+
+            while reader_connections:
+                for reader_connection in connection.wait(object_list=reader_connections):
+                    just_populated_table_name = ''
+
+                    try:
+                        just_populated_table_name = reader_connection.recv()
+                        reader_connection.close()
+                        reader_connections.remove(reader_connection)
+                    finally:
+                        ConstraintsProcessor.process_constraints_per_table(conversion, just_populated_table_name)
+
+        MigrationStateManager.set(conversion, 'per_table_constraints_loaded')
+
+    @staticmethod
+    def _load(config, data_pool_item, connection_to_master):
         """
         Loads the data using separate process.
         :param config: dict
         :param data_pool_item: dict
+        :param connection_to_master: multiprocessing.connection.PipeConnection
         :return: None
         """
         log_title = 'DataLoader::_load'
@@ -62,11 +105,19 @@ class DataLoader:
                 data_pool_item['_tableName'],
                 data_pool_item['_selectFieldList'],
                 data_pool_item['_rowsCnt'],
-                data_pool_item['_id']
+                data_pool_item['_id'],
+                connection_to_master
             )
 
     @staticmethod
-    def populate_table_worker(conversion, table_name, str_select_field_list, rows_cnt, data_pool_id):
+    def populate_table_worker(
+            conversion,
+            table_name,
+            str_select_field_list,
+            rows_cnt,
+            data_pool_id,
+            connection_to_master
+    ):
         """
         Loads a chunk of data using "PostgreSQL COPY".
         :param conversion: Conversion
@@ -74,6 +125,7 @@ class DataLoader:
         :param str_select_field_list: str
         :param rows_cnt: int
         :param data_pool_id: int
+        :param connection_to_master: multiprocessing.connection.Connection
         :return: None
         """
         log_title = 'DataLoader::populate_table_worker'
@@ -122,11 +174,17 @@ class DataLoader:
             msg = 'Data retrieved by following MySQL query has been rejected by the target PostgreSQL server.'
             FsOps.generate_error(conversion, '\t--[{0}] {1}\n\t--[{0}] {2}'.format(log_title, e, msg), sql)
         finally:
-            for resource in (text_stream, pg_cursor, mysql_cursor, mysql_client):
-                if resource:
-                    resource.close()
+            try:
+                connection_to_master.send(table_name)
+            except Exception as ex:
+                msg = 'Failed to notify master that %s table\'s populating is finished.' % table_name
+                FsOps.generate_error(conversion, '\t--[{0}] {1}\n\t--[{0}] {2}'.format(log_title, ex, msg))
+            finally:
+                for resource in (connection_to_master, text_stream, pg_cursor, mysql_cursor, mysql_client):
+                    if resource:
+                        resource.close()
 
-            DataLoader.delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role)
+                DataLoader.delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role)
 
     @staticmethod
     def delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role):
