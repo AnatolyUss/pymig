@@ -36,9 +36,9 @@ class ConstraintsProcessor:
         :param conversion: Conversion
         :return: None
         """
-        is_table_constraints_loaded = MigrationStateManager.get(conversion, 'per_table_constraints_loaded')
+        are_table_constraints_loaded = MigrationStateManager.get(conversion, 'per_table_constraints_loaded')
 
-        if not is_table_constraints_loaded:
+        if not are_table_constraints_loaded:
             params = [[conversion, table_name] for table_name in conversion.tables_to_migrate]
             ConcurrencyManager.run_in_parallel(conversion, ConstraintsProcessor.process_constraints_per_table, params)
 

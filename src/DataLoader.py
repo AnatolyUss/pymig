@@ -40,17 +40,6 @@ class DataLoader:
             return
 
         params_list = [[conversion.config, meta] for meta in conversion.data_pool]
-        DataLoader._run_data_pipe(conversion, DataLoader._load, params_list)
-
-    @staticmethod
-    def _run_data_pipe(conversion, func, params_list):
-        """
-        Runs the data-pipe.
-        :param conversion: Conversion
-        :param func: function
-        :param params_list: list
-        :return: None
-        """
         reader_connections = []
         number_of_workers = min(
             conversion.max_each_db_connection_pool_size,
@@ -64,7 +53,7 @@ class DataLoader:
                 reader_connections.append(reader_connection)
                 params = params_list.pop()
                 params.append(writer_connection)
-                executor.submit(func, *params)
+                executor.submit(DataLoader._load, *params)
 
             while reader_connections:
                 for reader_connection in connection.wait(object_list=reader_connections):
@@ -73,8 +62,8 @@ class DataLoader:
                     try:
                         just_populated_table_name = reader_connection.recv()
                         reader_connection.close()
-                        reader_connections.remove(reader_connection)
                     finally:
+                        reader_connections.remove(reader_connection)
                         ConstraintsProcessor.process_constraints_per_table(conversion, just_populated_table_name)
 
         MigrationStateManager.set(conversion, 'per_table_constraints_loaded')
