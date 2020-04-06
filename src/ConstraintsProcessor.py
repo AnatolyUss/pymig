@@ -23,7 +23,6 @@ from EnumProcessor import EnumProcessor
 from NullProcessor import NullProcessor
 from DefaultProcessor import DefaultProcessor
 from CommentsProcessor import CommentsProcessor
-from VacuumProcessor import VacuumProcessor
 from ForeignKeyProcessor import ForeignKeyProcessor
 from ViewGenerator import ViewGenerator
 
@@ -50,8 +49,6 @@ class ConstraintsProcessor:
             MigrationStateManager.set(conversion, 'foreign_keys_loaded')
             ViewGenerator.generate_views(conversion)
             MigrationStateManager.set(conversion, 'views_loaded')
-
-        VacuumProcessor.reclaim_storage(conversion)
 
         # !!!Note, dropping of data - pool and state - logs tables MUST be the last step of migration process.
         MigrationStateManager.drop_data_pool_table(conversion)

@@ -35,7 +35,6 @@ class Conversion:
         self.all_logs_path = os.path.join(self.logs_dir_path, 'all.log')
         self.error_logs_path = os.path.join(self.logs_dir_path, 'errors-only.log')
         self.not_created_views_path = os.path.join(self.logs_dir_path, 'not_created_views')
-        self.no_vacuum = self.config['no_vacuum'] if 'no_vacuum' in self.config else []
         self.exclude_tables = self.config['exclude_tables'] if 'exclude_tables' in self.config else []
         self.include_tables = self.config['include_tables'] if 'include_tables' in self.config else []
         self.encoding = self.config['encoding'] if 'encoding' in self.config else 'utf_8'
