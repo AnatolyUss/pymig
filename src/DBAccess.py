@@ -19,7 +19,7 @@ import sys
 import pymysql
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from DBUtils.PooledDB import PooledDB
+from dbutils.pooled_db import PooledDB
 from DBAccessQueryResult import DBAccessQueryResult
 from FsOps import FsOps
 import DBVendors
