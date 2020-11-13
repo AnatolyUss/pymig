@@ -128,37 +128,30 @@ class DataLoader:
         mysql_client = None
 
         try:
-            pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
-            pg_cursor = pg_client.cursor()
-
-            if conversion.should_migrate_only_data():
-                original_session_replication_role = DataLoader.disable_triggers(conversion, pg_client)
-
             mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
             mysql_cursor = mysql_client.cursor()
             mysql_cursor.execute(sql)
             number_of_inserted_rows = 0
+            number_of_workers = min(conversion.max_each_db_connection_pool_size / 2, cpu_count())
 
-            while True:
-                batch_size = 50000  # TODO: think about batch size calculation.
-                batch = mysql_cursor.fetchmany(batch_size)
-                rows_to_insert = len(batch)
+            with ProcessPoolExecutor(max_workers=number_of_workers) as executor:
+                while True:
+                    batch_size = 25000  # TODO: think about batch size calculation.
+                    batch = mysql_cursor.fetchmany(batch_size)
+                    rows_to_insert = len(batch)
 
-                if rows_to_insert == 0:
-                    break
+                    if rows_to_insert == 0:
+                        break
 
-                rows = ColumnsDataArranger.prepare_batch_for_copy(batch)
-                text_stream = io.StringIO()
-                text_stream.write(rows)
-                text_stream.seek(0)
-                pg_cursor.copy_from(text_stream, '"%s"."%s"' % (conversion.schema, table_name))
-                pg_client.commit()
-
-                number_of_inserted_rows += rows_to_insert
-                msg = '\t--[{0}] For now inserted: {4} rows, Total rows to insert into "{2}"."{3}": {1}' \
-                    .format(log_title, rows_cnt, conversion.schema, table_name, number_of_inserted_rows)
-
-                FsOps.log(conversion, msg)
+                    executor.submit(
+                        DataLoader._arrange_and_load_batch,
+                        conversion.config,
+                        table_name,
+                        batch,
+                        rows_cnt,
+                        rows_to_insert,
+                        number_of_inserted_rows
+                    )
         except Exception as e:
             msg = 'Data retrieved by following MySQL query has been rejected by the target PostgreSQL server.'
             FsOps.generate_error(conversion, '\t--[{0}] {1}\n\t--[{0}] {2}'.format(log_title, e, msg), sql)
@@ -174,6 +167,47 @@ class DataLoader:
                         resource.close()
 
                 DataLoader.delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role)
+
+    @staticmethod
+    def _arrange_and_load_batch(
+        conversion_config,
+        table_name,
+        batch,
+        rows_cnt,
+        rows_to_insert,
+        number_of_inserted_rows
+    ):
+        """
+        Formats a batch of data as csv, and passes it to COPY.
+        :param conversion_config: dict
+        :param table_name: str
+        :param batch: list
+        :param rows_cnt: int
+        :param rows_to_insert: int
+        :param number_of_inserted_rows: int
+        :return: None
+        """
+        conversion = Conversion(conversion_config)
+        pg_client = DBAccess.get_db_client(conversion, DBVendors.PG)
+        pg_cursor = pg_client.cursor()
+
+        if conversion.should_migrate_only_data():
+            # TODO: how to pass original_session_replication_role to the parent?
+            original_session_replication_role = DataLoader.disable_triggers(conversion, pg_client)
+
+        rows = ColumnsDataArranger.prepare_batch_for_copy(batch)
+        text_stream = io.StringIO()
+        text_stream.write(rows)
+        text_stream.seek(0)
+        pg_cursor.copy_from(text_stream, '"%s"."%s"' % (conversion.schema, table_name))
+        pg_client.commit()
+
+        number_of_inserted_rows += rows_to_insert
+        msg = '\t--[{0}] For now inserted: {4} rows, Total rows to insert into "{2}"."{3}": {1}' \
+            .format(log_title, rows_cnt, conversion.schema, table_name, number_of_inserted_rows)
+
+        print(msg)  # TODO: check why FsOps.log() below doesn't work as expected.
+        FsOps.log(conversion, msg)
 
     @staticmethod
     def delete_data_pool_item(conversion, data_pool_id, pg_client, original_session_replication_role):
@@ -198,6 +232,8 @@ class DataLoader:
             should_return_client=True,
             client=pg_client
         )
+
+        FsOps.log(conversion, f'\t--[{log_title}] Deleted #{data_pool_id} from data-pool')
 
         if original_session_replication_role and result.client:
             DataLoader.enable_triggers(conversion, result.client, original_session_replication_role)
