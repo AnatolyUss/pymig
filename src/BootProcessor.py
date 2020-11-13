@@ -57,22 +57,8 @@ class BootProcessor:
             if state_logs_table_exist \
             else '\n\t--[BootProcessor::boot] FromMySqlToPostgreSql is ready to start.'
 
-        state_message += '\n\t--[BootProcessor::boot] Proceed? [Y/n]\n\t'
-
-        while True:
-            user_input = input(state_message)
-            user_input = user_input.strip()
-
-            if user_input == 'N' or user_input == 'n':
-                print('\t--[BootProcessor::boot] Migration aborted.\n')
-                sys.exit(0)
-            elif user_input == 'Y' or user_input == 'y':
-                conversion.time_begin = time.time()
-                return
-            else:
-                hint = '\t--[BootProcessor::boot] Unexpected input %s \n\t--[BootProcessor::boot] ' \
-                       + 'Expected input is upper case Y or lower case n\n'
-                print(hint % user_input)
+        print(state_message)
+        conversion.time_begin = time.time()
 
     @staticmethod
     def get_introduction_message():
