@@ -13,9 +13,11 @@
         "host"     : "localhost",
         "port"     : 3306,
         "database" : "test_db",
+        "database" : "sample_staff",
         "charset"  : "utf8mb4",
         "user"     : "root",
-        "password" : "0123456789"
+        "password" : "0123456789",
+        "password" : "30071984@Tal"
     },
 
     "target_description" : [
@@ -27,9 +29,11 @@
         "host"     : "localhost",
         "port"     : 5432,
         "database" : "test_db",
+        "database" : "sample_staff",
         "charset"  : "UTF8",
         "user"     : "postgres",
-        "password" : "0123456789"
+        "password" : "0123456789",
+        "password" : "30071984@Tal"
     },
 
     "max_each_db_connection_pool_size_description" : [
@@ -63,6 +67,7 @@
         "By default, FromMySqlToPostgreSql will migrate all tables."
     ],
     "include_tables": [],
+    "include_tables": ["date"],
 
     "migrate_only_data_description" : [
         "In order to skip schema migration, and just migrate data into a preset tables",
