@@ -19,14 +19,13 @@ import app.migration_state_manager as MigrationStateManager
 from app.conversion import Conversion
 from app.indexesProcessor import create_indexes
 from app.concurrency_manager import run_concurrently
-
-from SequencesProcessor import SequencesProcessor
-from EnumProcessor import EnumProcessor
-from NullProcessor import NullProcessor
-from DefaultProcessor import DefaultProcessor
-from CommentsProcessor import CommentsProcessor
-from ForeignKeyProcessor import ForeignKeyProcessor
-from ViewGenerator import ViewGenerator
+from app.enum_processor import process_enum
+from app.sequences_processor import set_sequence_value, create_sequence
+from app.null_processor import process_null
+from app.default_processor import process_default
+from app.comments_processor import process_comments
+from app.view_generator import generate_views
+from app.foreign_key_processor import set_foreign_keys
 
 
 def process_constraints(conversion: Conversion) -> None:
@@ -43,9 +42,9 @@ def process_constraints(conversion: Conversion) -> None:
         MigrationStateManager.set(conversion, 'per_table_constraints_loaded', 'foreign_keys_loaded', 'views_loaded')
     else:
         MigrationStateManager.set(conversion, 'per_table_constraints_loaded')
-        ForeignKeyProcessor.set_foreign_keys(conversion)
+        set_foreign_keys(conversion)
         MigrationStateManager.set(conversion, 'foreign_keys_loaded')
-        ViewGenerator.generate_views(conversion)
+        generate_views(conversion)
         MigrationStateManager.set(conversion, 'views_loaded')
 
     # !!!Note, dropping of data - pool and state - logs tables MUST be the last step of migration process.
@@ -58,11 +57,11 @@ def process_constraints_per_table(conversion: Conversion, table_name: str) -> No
     Processes given table's constraints.
     """
     if conversion.should_migrate_only_data():
-        return SequencesProcessor.set_sequence_value(conversion, table_name)
+        return set_sequence_value(conversion, table_name)
 
-    EnumProcessor.process_enum(conversion, table_name)
-    NullProcessor.process_null(conversion, table_name)
-    DefaultProcessor.process_default(conversion, table_name)
-    SequencesProcessor.create_sequence(conversion, table_name)
+    process_enum(conversion, table_name)
+    process_null(conversion, table_name)
+    process_default(conversion, table_name)
+    create_sequence(conversion, table_name)
     create_indexes(conversion, table_name)
-    CommentsProcessor.process_comments(conversion, table_name)
+    process_comments(conversion, table_name)

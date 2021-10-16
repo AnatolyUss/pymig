@@ -19,7 +19,7 @@ import time
 import sys
 
 import app.db_access as DBAccess
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
 from app.fs_ops import generate_error
 from app.conversion import Conversion
 
@@ -43,7 +43,7 @@ def boot(conversion: Conversion) -> None:
         conversion=conversion,
         caller=boot.__name__,
         sql=sql,
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=False
     )
@@ -75,7 +75,7 @@ def _check_connection(conversion: Conversion) -> str:
         conversion=conversion,
         caller=_check_connection.__name__,
         sql=sql,
-        vendor=DBVendors.MYSQL.value,
+        vendor=DBVendor.MYSQL,
         process_exit_on_error=False,
         should_return_client=False
     )
@@ -85,7 +85,7 @@ def _check_connection(conversion: Conversion) -> str:
         conversion=conversion,
         caller=_check_connection.__name__,
         sql=sql,
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=False,
         should_return_client=False
     )

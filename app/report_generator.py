@@ -17,6 +17,7 @@ __license__ = """
 """
 import time
 import math
+from typing import cast
 
 from app.conversion import Conversion
 from app.fs_ops import log
@@ -27,7 +28,7 @@ def generate_report(conversion: Conversion, last_message: str) -> None:
     Generates a summary report.
     """
     log_title = generate_report.__name__
-    difference_sec = (time.time() - conversion.time_begin)
+    difference_sec = (time.time() - cast(float, conversion.time_begin))
     seconds = math.floor(difference_sec % 60)
     difference_sec /= 60
     minutes = math.floor(difference_sec % 60)

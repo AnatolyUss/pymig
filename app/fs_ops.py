@@ -17,7 +17,7 @@ __license__ = """
 """
 import json
 import os
-from typing import Optional
+from typing import Optional, cast
 
 from app.conversion import Conversion
 
@@ -26,9 +26,8 @@ def create_logs_directory(conversion: Conversion) -> None:
     """
     Creates logs directory.
     """
-    logs_title = create_logs_directory.__name__
-    _create_directory(conversion.logs_dir_path, logs_title)
-    _create_directory(conversion.not_created_views_path, logs_title)
+    _create_directory(conversion.logs_dir_path, create_logs_directory.__name__)
+    _create_directory(conversion.not_created_views_path, create_logs_directory.__name__)
 
 
 def _create_directory(directory_path: str, log_title: str) -> None:
@@ -83,7 +82,7 @@ def read_config(base_dir: str, config_file_name: str = 'config.json') -> dict:
         config = json.loads(config_str)
         config['logs_dir_path'] = os.path.join(base_dir, 'logs_directory')
         config['data_types_map_addr'] = os.path.join(base_dir, 'config', 'data_types_map.json')
-        return config
+        return cast(dict, config)
 
 
 def read_extra_config(config: dict, base_dir: str) -> dict:

@@ -16,7 +16,7 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import app.db_access as DBAccess
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
 from app.fs_ops import log
 from app.conversion import Conversion
 
@@ -44,7 +44,7 @@ def get(conversion: Conversion, param: str) -> bool:
         conversion=conversion,
         caller=get.__name__,
         sql=f'SELECT {param} FROM {table_name};',
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=False
     )
@@ -62,7 +62,7 @@ def set(conversion: Conversion, *states: str) -> None:
         conversion=conversion,
         caller=set.__name__,
         sql=f'UPDATE {table_name} SET {states_sql};',
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=False
     )
@@ -77,7 +77,7 @@ def create_data_pool_table(conversion: Conversion) -> None:
         conversion=conversion,
         caller=create_data_pool_table.__name__,
         sql=f'CREATE TABLE IF NOT EXISTS {table_name}("id" BIGSERIAL, "metadata" JSON);',
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=False
     )
@@ -94,7 +94,7 @@ def drop_data_pool_table(conversion: Conversion) -> None:
         conversion=conversion,
         caller=drop_data_pool_table.__name__,
         sql=f'DROP TABLE {table_name};',
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=False,
         should_return_client=False
     )
@@ -111,7 +111,7 @@ def read_data_pool(conversion: Conversion) -> None:
         conversion=conversion,
         caller=read_data_pool.__name__,
         sql=f'SELECT id AS id, metadata AS metadata FROM {table_name};',
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=False
     )
@@ -138,7 +138,7 @@ def create_state_logs_table(conversion: Conversion) -> None:
         conversion=conversion,
         caller=create_state_logs_table.__name__,
         sql=sql,
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=True
     )
@@ -147,7 +147,7 @@ def create_state_logs_table(conversion: Conversion) -> None:
         conversion=conversion,
         caller=create_state_logs_table.__name__,
         sql=f'SELECT COUNT(1) AS cnt FROM {table_name};',
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=True,
         client=result.client
@@ -160,7 +160,7 @@ def create_state_logs_table(conversion: Conversion) -> None:
             conversion=conversion,
             caller=create_state_logs_table.__name__,
             sql=f'INSERT INTO {table_name} VALUES (FALSE, FALSE, FALSE, FALSE);',
-            vendor=DBVendors.PG.value,
+            vendor=DBVendor.PG,
             process_exit_on_error=True,
             should_return_client=False,
             client=result.client
@@ -182,7 +182,7 @@ def drop_state_logs_table(conversion: Conversion) -> None:
         conversion=conversion,
         caller=drop_state_logs_table.__name__,
         sql=f'DROP TABLE {state_logs_table_name};',
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=False,
         should_return_client=False
     )

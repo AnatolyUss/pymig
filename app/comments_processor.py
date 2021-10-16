@@ -15,132 +15,115 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-from FsOps import FsOps
-from ExtraConfigProcessor import ExtraConfigProcessor
-from ConcurrencyManager import ConcurrencyManager
-from DBAccess import DBAccess
-import DBVendors
+import app.db_access as DBAccess
+import app.extra_config_processor as ExtraConfigProcessor
+from app.fs_ops import log
+from app.conversion import Conversion
+from app.concurrency_manager import run_concurrently
+from app.db_vendor import DBVendor
 
 
-class CommentsProcessor:
-    @staticmethod
-    def process_comments(conversion, table_name):
-        """
-        Migrates comments.
-        :param conversion: Conversion
-        :param table_name: str
-        :return: None
-        """
-        log_title = 'CommentsProcessor::processComments'
-        msg = '\t--[%s] Creates comments for table "%s"."%s"...' % (log_title, conversion.schema, table_name)
-        FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
-        CommentsProcessor._process_table_comments(conversion, table_name)
-        CommentsProcessor._process_columns_comments(conversion, table_name)
+def process_comments(conversion: Conversion, table_name: str) -> None:
+    """
+    Migrates comments.
+    """
+    msg = f'\t--[{process_comments.__name__}] Creates comments for table "{conversion.schema}"."{table_name}"...'
+    log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
+    _process_table_comments(conversion, table_name)
+    _process_columns_comments(conversion, table_name)
 
-    @staticmethod
-    def _process_table_comments(conversion, table_name):
-        """
-        Creates table comments.
-        :param conversion: Conversion
-        :param table_name: str
-        :return: None
-        """
-        log_title = 'CommentsProcessor::_process_table_comments'
-        sql_select_comment = '''
-            SELECT table_comment AS table_comment FROM information_schema.tables 
-            WHERE table_schema = '%s' AND table_name = '%s';
-        ''' % (
-            conversion.mysql_db_name,
-            ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
-        )
 
-        select_comments_result = DBAccess.query(
-            conversion=conversion,
-            caller=log_title,
-            sql=sql_select_comment,
-            vendor=DBVendors.MYSQL,
-            process_exit_on_error=False,
-            should_return_client=False
-        )
+def _process_table_comments(conversion: Conversion, table_name: str) -> None:
+    """
+    Creates table comments.
+    """
+    sql_select_comment = (f"SELECT table_comment AS table_comment FROM information_schema.tables "
+                          f"WHERE table_schema = '{conversion.mysql_db_name}' AND table_name = "
+                          f"'{ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)}';")
 
-        if select_comments_result.error:
-            return
+    select_comments_result = DBAccess.query(
+        conversion=conversion,
+        caller=_process_table_comments.__name__,
+        sql=sql_select_comment,
+        vendor=DBVendor.MYSQL,
+        process_exit_on_error=False,
+        should_return_client=False
+    )
 
-        comment = CommentsProcessor._escape_quotes(select_comments_result.data[0]['table_comment'])
-        sql_create_comment = 'COMMENT ON TABLE "%s"."%s" IS \'%s\';' % (conversion.schema, table_name, comment)
-        create_comment_result = DBAccess.query(
-            conversion=conversion,
-            caller=log_title,
-            sql=sql_create_comment,
-            vendor=DBVendors.PG,
-            process_exit_on_error=False,
-            should_return_client=False
-        )
+    if select_comments_result.error:
+        return
 
-        if create_comment_result.error:
-            return
+    comment = _escape_quotes(select_comments_result.data[0]['table_comment'])
+    sql_create_comment = f'COMMENT ON TABLE "{conversion.schema}"."{table_name}" IS \'{comment}\';'
+    create_comment_result = DBAccess.query(
+        conversion=conversion,
+        caller=_process_table_comments.__name__,
+        sql=sql_create_comment,
+        vendor=DBVendor.PG,
+        process_exit_on_error=False,
+        should_return_client=False
+    )
 
-        msg = '\t--[%s] Successfully set comment for table "%s"."%s"' % (log_title, conversion.schema, table_name)
-        FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
+    if create_comment_result.error:
+        return
 
-    @staticmethod
-    def _process_columns_comments(conversion, table_name):
-        """
-        Creates columns comments.
-        :param conversion: Conversion
-        :param table_name: str
-        :return: None
-        """
-        original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
-        params = [
-            [conversion, table_name, original_table_name, column]
-            for column in conversion.dic_tables[table_name].table_columns
-            if column['Comment'] != ''
-        ]
+    msg = (f'\t--[{_process_table_comments.__name__}]'
+           f' Successfully set comment for table "{conversion.schema}"."{table_name}"')
 
-        ConcurrencyManager.run_concurrently(conversion, CommentsProcessor._set_column_comment, params)
+    log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
 
-    @staticmethod
-    def _set_column_comment(conversion, table_name, original_table_name, column):
-        """
-        Creates comment on specified column.
-        :param conversion: Conversion
-        :param table_name: str
-        :param original_table_name: str
-        :param column: dict
-        :return: None
-        """
-        log_title = 'CommentsProcessor::_set_column_comment'
-        column_name = ExtraConfigProcessor.get_column_name(
-            conversion=conversion,
-            original_table_name=original_table_name,
-            current_column_name=column['Field'],
-            should_get_original=False
-        )
 
-        comment = CommentsProcessor._escape_quotes(column['Comment'])
-        create_comment_result = DBAccess.query(
-            conversion=conversion,
-            caller=log_title,
-            sql='COMMENT ON COLUMN "%s"."%s"."%s" IS \'%s\';' % (conversion.schema, table_name, column_name, comment),
-            vendor=DBVendors.PG,
-            process_exit_on_error=False,
-            should_return_client=False
-        )
+def _process_columns_comments(conversion: Conversion, table_name: str) -> None:
+    """
+    Creates columns comments.
+    """
+    original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
+    params = [
+        [conversion, table_name, original_table_name, column]
+        for column in conversion.dic_tables[table_name].table_columns
+        if column['Comment'] != ''
+    ]
 
-        if create_comment_result.error:
-            return
+    run_concurrently(conversion, _set_column_comment, params)
 
-        msg = '\t--[%s] Set comment for "%s"."%s" column: "%s"...' \
-              % (log_title, conversion.schema, table_name, column_name)
 
-        FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
+def _set_column_comment(
+    conversion: Conversion,
+    table_name: str,
+    original_table_name: str,
+    column: dict
+) -> None:
+    """
+    Creates comment on specified column.
+    """
+    column_name = ExtraConfigProcessor.get_column_name(
+        conversion=conversion,
+        original_table_name=original_table_name,
+        current_column_name=column['Field'],
+        should_get_original=False
+    )
 
-    @staticmethod
-    def _escape_quotes(string):
-        """
-        Escapes quotes inside given string.
-        :param string: str
-        :return: str
-        """
-        return string.replace("'", "''")
+    comment = _escape_quotes(column['Comment'])
+    create_comment_result = DBAccess.query(
+        conversion=conversion,
+        caller=_set_column_comment.__name__,
+        sql=f'COMMENT ON COLUMN "{conversion.schema}"."{table_name}"."{column_name}" IS \'{comment}\';',
+        vendor=DBVendor.PG,
+        process_exit_on_error=False,
+        should_return_client=False
+    )
+
+    if create_comment_result.error:
+        return
+
+    msg = (f'\t--[{_set_column_comment.__name__}] Set comment for'
+           f' "{conversion.schema}"."{table_name}" column: "{column_name}"...')
+
+    log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
+
+
+def _escape_quotes(string: str) -> str:
+    """
+    Escapes quotes inside given string.
+    """
+    return string.replace("'", "''")

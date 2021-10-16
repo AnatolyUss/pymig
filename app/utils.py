@@ -15,12 +15,10 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-from collections.abc import Iterable
-
-from app.py_type import Scalar
+from typing import Union
 
 
-def get_index_of(needle: Scalar, haystack: Iterable) -> int:
+def get_index_of(needle: str, haystack: Union[str, list[str]]) -> int:
     """
     Returns an index of given needle in the haystack.
     The needle can be a variable of any type.
@@ -29,5 +27,5 @@ def get_index_of(needle: Scalar, haystack: Iterable) -> int:
     """
     try:
         return haystack.index(needle)
-    except ValueError:
+    except:
         return -1

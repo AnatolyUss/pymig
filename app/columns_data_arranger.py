@@ -18,7 +18,7 @@ __license__ = """
 from app.utils import get_index_of
 
 
-def arrange_columns_data(table_columns: list[str], mysql_version: str) -> str:
+def arrange_columns_data(table_columns: list[dict], mysql_version: str) -> str:
     """
     Arranges columns data before loading.
     """

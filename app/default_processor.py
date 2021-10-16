@@ -15,96 +15,90 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-from FsOps import FsOps
-from ExtraConfigProcessor import ExtraConfigProcessor
-from TableProcessor import TableProcessor
-from ConcurrencyManager import ConcurrencyManager
-from DBAccess import DBAccess
+import app.db_access as DBAccess
+import app.extra_config_processor as ExtraConfigProcessor
+from app.table_processor import map_data_types
+from app.conversion import Conversion
+from app.concurrency_manager import run_concurrently
 from app.utils import get_index_of
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
+from app.fs_ops import log
 
 
-class DefaultProcessor:
-    @staticmethod
-    def process_default(conversion, table_name):
-        """
-        Determines which columns of the given table have default value.
-        Sets default values where appropriate.
-        :param conversion: Conversion
-        :param table_name: str
-        :return: None
-        """
-        log_title = 'DefaultProcessor::process_default'
-        msg = '\t--[%s] Determines default values for table: "%s"."%s"' % (log_title, conversion.schema, table_name)
-        FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
-        original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
-        pg_numeric_types = ('money', 'numeric', 'decimal', 'double precision', 'real', 'bigint', 'int', 'smallint')
-        sql_reserved_values = {
-            'CURRENT_DATE': 'CURRENT_DATE',
-            '0000-00-00': "'-INFINITY'",
-            'CURRENT_TIME': 'CURRENT_TIME',
-            '00:00:00': '00:00:00',
-            'CURRENT_TIMESTAMP': 'CURRENT_TIMESTAMP',
-            '0000-00-00 00:00:00': "'-INFINITY'",
-            'LOCALTIME': 'LOCALTIME',
-            'LOCALTIMESTAMP': 'LOCALTIMESTAMP',
-            'NULL': 'NULL',
-            'null': 'NULL',
-            'UTC_DATE': "(CURRENT_DATE AT TIME ZONE 'UTC')",
-            'UTC_TIME': "(CURRENT_TIME AT TIME ZONE 'UTC')",
-            'UTC_TIMESTAMP': "(NOW() AT TIME ZONE 'UTC')",
-        }
+def process_default(conversion: Conversion, table_name: str) -> None:
+    """
+    Determines which columns of the given table have default value.
+    Sets default values where appropriate.
+    """
+    msg = f'\t--[{process_default.__name__}] Determines default values for table: "{conversion.schema}"."{table_name}"'
+    log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
+    original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
+    pg_numeric_types = ('money', 'numeric', 'decimal', 'double precision', 'real', 'bigint', 'int', 'smallint')
+    sql_reserved_values = {
+        'CURRENT_DATE': 'CURRENT_DATE',
+        '0000-00-00': "'-INFINITY'",
+        'CURRENT_TIME': 'CURRENT_TIME',
+        '00:00:00': '00:00:00',
+        'CURRENT_TIMESTAMP': 'CURRENT_TIMESTAMP',
+        '0000-00-00 00:00:00': "'-INFINITY'",
+        'LOCALTIME': 'LOCALTIME',
+        'LOCALTIMESTAMP': 'LOCALTIMESTAMP',
+        'NULL': 'NULL',
+        'null': 'NULL',
+        'UTC_DATE': "(CURRENT_DATE AT TIME ZONE 'UTC')",
+        'UTC_TIME': "(CURRENT_TIME AT TIME ZONE 'UTC')",
+        'UTC_TIMESTAMP': "(NOW() AT TIME ZONE 'UTC')",
+    }
 
-        params = [
-            [conversion, table_name, original_table_name, column, sql_reserved_values, pg_numeric_types]
-            for column in conversion.dic_tables[table_name].table_columns
-        ]
+    params = [
+        [conversion, table_name, original_table_name, column, sql_reserved_values, pg_numeric_types]
+        for column in conversion.dic_tables[table_name].table_columns
+    ]
 
-        ConcurrencyManager.run_concurrently(conversion, DefaultProcessor._set_default, params)
+    run_concurrently(conversion, _set_default, params)
 
-    @staticmethod
-    def _set_default(conversion, table_name, original_table_name, column, sql_reserved_values, pg_numeric_types):
-        """
-        Sets default value for given column.
-        :param conversion: Conversion
-        :param table_name: str
-        :param original_table_name: str
-        :param column: dict
-        :param sql_reserved_values: dict
-        :param pg_numeric_types: tuple
-        :return: None
-        """
-        pg_data_type = TableProcessor.map_data_types(conversion.data_types_map, column['Type'])
-        log_title = 'DefaultProcessor::_set_default'
-        column_name = ExtraConfigProcessor.get_column_name(
-            conversion=conversion,
-            original_table_name=original_table_name,
-            current_column_name=column['Field'],
-            should_get_original=False
-        )
 
-        sql = 'ALTER TABLE "%s"."%s" ALTER COLUMN "%s" SET DEFAULT ' % (conversion.schema, table_name, column_name)
+def _set_default(
+    conversion: Conversion,
+    table_name: str,
+    original_table_name: str,
+    column: dict,
+    sql_reserved_values: dict[str, str],
+    pg_numeric_types: tuple[str]
+) -> None:
+    """
+    Sets default value for given column.
+    """
+    pg_data_type = map_data_types(conversion.data_types_map, column['Type'])
+    column_name = ExtraConfigProcessor.get_column_name(
+        conversion=conversion,
+        original_table_name=original_table_name,
+        current_column_name=column['Field'],
+        should_get_original=False
+    )
 
-        if column['Default'] in sql_reserved_values:
-            sql += '%s;' % sql_reserved_values[column['Default']]
-        elif get_index_of(pg_data_type, pg_numeric_types) == -1 and column['Default'] is not None:
-            sql += "'%s';" % column['Default']
-        elif column['Default'] is None:
-            sql += 'NULL;'
-        else:
-            sql += "%s;" % column['Default']
+    sql = f'ALTER TABLE "{conversion.schema}"."{table_name}" ALTER COLUMN "{column_name}" SET DEFAULT'
 
-        result = DBAccess.query(
-            conversion=conversion,
-            caller=log_title,
-            sql=sql,
-            vendor=DBVendors.PG,
-            process_exit_on_error=False,
-            should_return_client=False
-        )
+    if column['Default'] in sql_reserved_values:
+        sql += f" {sql_reserved_values[column['Default']]};"
+    elif get_index_of(pg_data_type, pg_numeric_types) == -1 and column['Default'] is not None:
+        sql += f" '{column['Default']}';"
+    elif column['Default'] is None:
+        sql += ' NULL;'
+    else:
+        sql += f" {column['Default']};"
 
-        if not result.error:
-            msg = '\t--[%s] Sets default value for "%s"."%s"."%s"...' \
-                  % (log_title, conversion.schema, table_name, column_name)
+    result = DBAccess.query(
+        conversion=conversion,
+        caller=_set_default.__name__,
+        sql=sql,
+        vendor=DBVendor.PG,
+        process_exit_on_error=False,
+        should_return_client=False
+    )
 
-            FsOps.log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
+    if not result.error:
+        msg = (f'\t--[{_set_default.__name__}] Sets default value for'
+               f' "{conversion.schema}"."{table_name}"."{column_name}"...')
+
+        log(conversion, msg, conversion.dic_tables[table_name].table_log_path)

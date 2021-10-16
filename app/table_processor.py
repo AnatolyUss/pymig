@@ -17,7 +17,7 @@ __license__ = """
 """
 import app.db_Access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
 from app.fs_ops import log
 from app.utils import get_index_of
 from app.conversion import Conversion
@@ -34,7 +34,7 @@ def create_table(conversion: Conversion, table_name: str) -> None:
         conversion=conversion,
         caller=create_table.__name__,
         sql=f'SHOW FULL COLUMNS FROM `{original_table_name}`;',
-        vendor=DBVendors.MYSQL.value,
+        vendor=DBVendor.MYSQL,
         process_exit_on_error=False,
         should_return_client=False
     )
@@ -60,7 +60,7 @@ def create_table(conversion: Conversion, table_name: str) -> None:
         conversion=conversion,
         caller=create_table.__name__,
         sql=f'CREATE TABLE IF NOT EXISTS "{conversion.schema}"."{table_name}"({sql_columns});',
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=False
     )

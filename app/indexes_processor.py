@@ -22,7 +22,7 @@ import app.db_access as DBAccess
 from app.conversion import Conversion
 from app.fs_ops import log
 from app.concurrency_manager import run_concurrently
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
 
 
 def create_indexes(conversion: Conversion, table_name: str) -> None:
@@ -34,7 +34,7 @@ def create_indexes(conversion: Conversion, table_name: str) -> None:
         conversion=conversion,
         caller=create_indexes.__name__,
         sql=f'SHOW INDEX FROM `{original_table_name}`;',
-        vendor=DBVendors.MYSQL.value,
+        vendor=DBVendor.MYSQL,
         process_exit_on_error=False,
         should_return_client=False
     )
@@ -102,7 +102,7 @@ def _set_index(
         conversion=conversion,
         caller=_set_index.__name__,
         sql=sql_add_index,
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=False,
         should_return_client=False
     )

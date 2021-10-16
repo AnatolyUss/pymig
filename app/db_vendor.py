@@ -18,6 +18,6 @@ __license__ = """
 from enum import Enum
 
 
-class DBVendors(str, Enum):
-    MYSQL = 'mysql'
-    PG = 'pg'
+class DBVendor(str, Enum):
+    MYSQL = 'MYSQL'
+    PG = 'PG'

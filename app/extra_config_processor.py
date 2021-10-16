@@ -15,6 +15,8 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from typing import cast
+
 from app.conversion import Conversion
 
 
@@ -27,12 +29,12 @@ def get_column_name(
     """
     Retrieves appropriate column name.
     """
-    if conversion.extra_config is not None and 'tables' in conversion.extra_config:
+    if 'tables' in conversion.extra_config:
         for table_dict in conversion.extra_config['tables']:
             if table_dict['name']['original'] == original_table_name and 'columns' in table_dict:
                 for column_dict in table_dict['columns']:
                     if column_dict['original'] == current_column_name:
-                        return column_dict['original'] if should_get_original else column_dict['new']
+                        return cast(str, column_dict['original'] if should_get_original else column_dict['new'])
 
     return current_column_name
 
@@ -45,11 +47,11 @@ def get_table_name(
     """
     Retrieves appropriate table name.
     """
-    if conversion.extra_config is not None and 'tables' in conversion.extra_config:
+    if 'tables' in conversion.extra_config:
         for table_dict in conversion.extra_config['tables']:
             table_name = table_dict['name']['new'] if should_get_original else table_dict['name']['original']
             if table_name == current_table_name:
-                return table_dict['name']['original'] if should_get_original else table_dict['name']['new']
+                return cast(str, table_dict['name']['original'] if should_get_original else table_dict['name']['new'])
 
     return current_table_name
 
@@ -63,7 +65,7 @@ def parse_foreign_keys(
     required by ForeignKeyProcessor.process_foreign_key_worker.
     """
     ret_val = []
-    if conversion.extra_config is not None and 'foreign_keys' in conversion.extra_config:
+    if 'foreign_keys' in conversion.extra_config:
         for row in conversion.extra_config['foreign_keys']:
             if row['table_name'] == table_name:
                 # There may be several FKs in a single table.

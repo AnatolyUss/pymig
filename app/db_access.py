@@ -26,7 +26,7 @@ from dbutils.pooled_db import PooledDB, PooledDedicatedDBConnection
 
 from app.db_access_query_result import DBAccessQueryResult
 from app.fs_ops import generate_error
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
 from app.conversion import Conversion
 
 
@@ -35,7 +35,7 @@ def _ensure_mysql_connection(conversion: Conversion) -> None:
     Ensures MySQL connection pool existence.
     """
     if not conversion.mysql:
-        conversion.mysql = _get_pooled_db(conversion, DBVendors.MYSQL.value, conversion.source_con_string)
+        conversion.mysql = _get_pooled_db(conversion, DBVendor.MYSQL, conversion.source_con_string)
 
 
 def _ensure_pg_connection(conversion: Conversion) -> None:
@@ -43,12 +43,12 @@ def _ensure_pg_connection(conversion: Conversion) -> None:
     Ensures PostgreSQL connection pool existence.
     """
     if not conversion.pg:
-        conversion.pg = _get_pooled_db(conversion, DBVendors.PG.value, conversion.target_con_string)
+        conversion.pg = _get_pooled_db(conversion, DBVendor.PG, conversion.target_con_string)
 
 
 def _get_pooled_db(
     conversion: Conversion,
-    db_vendor: DBVendors,
+    db_vendor: DBVendor,
     db_connection_details: dict
 ) -> PooledDB:
     """
@@ -65,13 +65,13 @@ def _get_pooled_db(
         'maxconnections': conversion.max_each_db_connection_pool_size,
     }
 
-    if db_vendor == DBVendors.MYSQL.value:
+    if db_vendor == DBVendor.MYSQL:
         connection_details.update({
             'creator': pymysql,
             'cursorclass': pymysql.cursors.DictCursor,
             'charset': db_connection_details['charset'],
         })
-    elif db_vendor == DBVendors.PG.value:
+    elif db_vendor == DBVendor.PG:
         connection_details.update({
             'creator': psycopg2,
             'client_encoding': db_connection_details['charset'],
@@ -112,15 +112,15 @@ def get_mysql_unbuffered_client(conversion: Conversion) -> PymysqlConnection:
 
 def get_db_client(
     conversion: Conversion,
-    db_vendor: DBVendors
+    db_vendor: DBVendor
 ) -> PooledDedicatedDBConnection:
     """
     Obtains PooledDedicatedDBConnection instance.
     """
-    if db_vendor == DBVendors.PG.value:
+    if db_vendor == DBVendor.PG:
         _ensure_pg_connection(conversion)
         return conversion.pg.connection(shareable=False)
-    elif db_vendor == DBVendors.MYSQL.value:
+    elif db_vendor == DBVendor.MYSQL:
         _ensure_mysql_connection(conversion)
         return conversion.mysql.connection(shareable=False)
     else:
@@ -160,7 +160,7 @@ def query(
     conversion: Conversion,
     caller: str,
     sql: str,
-    vendor: DBVendors,
+    vendor: DBVendor,
     process_exit_on_error: bool,
     should_return_client: bool,
     client: Optional[PooledDedicatedDBConnection] = None,
@@ -179,7 +179,7 @@ def query(
             # If the client is not available then it must be requested from the connection pool.
             client = get_db_client(conversion, vendor)
 
-        cursor = client.cursor(cursor_factory=RealDictCursor) if vendor == DBVendors.PG.value else client.cursor()
+        cursor = client.cursor(cursor_factory=RealDictCursor) if vendor == DBVendor.PG else client.cursor()
 
         if bindings:
             cursor.execute(sql, bindings)

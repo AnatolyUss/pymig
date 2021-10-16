@@ -16,7 +16,7 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import app.db_access as DBAccess
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
 from app.conversion import Conversion
 
 
@@ -28,7 +28,7 @@ def create_schema(conversion: Conversion) -> None:
         conversion=conversion,
         caller=create_schema.__name__,
         sql=f"SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{conversion.schema}';",
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=True
     )
@@ -38,7 +38,7 @@ def create_schema(conversion: Conversion) -> None:
             conversion=conversion,
             caller=create_schema.__name__,
             sql=f'CREATE SCHEMA "{conversion.schema}";',
-            vendor=DBVendors.PG.value,
+            vendor=DBVendor.PG,
             process_exit_on_error=True,
             should_return_client=False,
             client=result.client

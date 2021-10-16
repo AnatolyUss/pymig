@@ -18,7 +18,7 @@ __license__ = """
 import app.db_access as DBAccess
 import app.migration_state_manager as MigrationStateManager
 import app.extra_config_processor as ExtraConfigProcessor
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
 from app.utils import get_index_of
 from app.table import Table
 from app.fs_ops import log
@@ -48,7 +48,7 @@ def load_structure(conversion: Conversion) -> None:
         conversion=conversion,
         caller=load_structure.__name__,
         sql=f'{sql};',
-        vendor=DBVendors.MYSQL.value,
+        vendor=DBVendor.MYSQL,
         process_exit_on_error=True,
         should_return_client=False
     )
@@ -98,7 +98,7 @@ def _get_mysql_version(conversion: Conversion) -> None:
         conversion=conversion,
         caller=_get_mysql_version.__name__,
         sql='SELECT VERSION() AS mysql_version;',
-        vendor=DBVendors.MYSQL.value,
+        vendor=DBVendor.MYSQL,
         process_exit_on_error=False,
         should_return_client=False
     )

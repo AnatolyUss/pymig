@@ -16,7 +16,7 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import os
-from typing import Optional, Union
+from typing import Optional
 
 from dbutils.pooled_db import PooledDB
 
@@ -40,7 +40,7 @@ class Conversion:
     encoding: str
     time_begin: Optional[float]
     mysql_version: str
-    extra_config: Union[dict, bool]
+    extra_config: dict
     tables_to_migrate: list[str]
     views_to_migrate: list[str]
     data_pool: list[dict]
@@ -63,7 +63,7 @@ class Conversion:
         self.mysql = None
         self.pg = None
         self.logs_dir_path = self.config['logs_dir_path']
-        self.data_types_map = None
+        self.data_types_map = {}
         self.data_types_map_addr = self.config['data_types_map_addr']
         self.all_logs_path = os.path.join(self.logs_dir_path, 'all.log')
         self.error_logs_path = os.path.join(self.logs_dir_path, 'errors-only.log')
@@ -73,7 +73,7 @@ class Conversion:
         self.encoding = self.config['encoding'] if 'encoding' in self.config else 'utf_8'
         self.time_begin = None
         self.mysql_version = '5.6.21'
-        self.extra_config = self.config['extra_config'] if 'extra_config' in self.config else False
+        self.extra_config = self.config['extra_config'] if 'extra_config' in self.config else {}
         self.tables_to_migrate = []
         self.views_to_migrate = []
         self.data_pool = []

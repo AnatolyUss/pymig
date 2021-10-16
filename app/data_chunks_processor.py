@@ -19,7 +19,7 @@ import json
 
 import app.db_access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
 from app.fs_ops import log
 from app.columns_data_arranger import arrange_columns_data
 from app.conversion import Conversion
@@ -48,7 +48,7 @@ def prepare_data_chunks(
         conversion=conversion,
         caller=prepare_data_chunks.__name__,
         sql=f'SELECT COUNT(1) AS rows_count FROM `{original_table_name}`;',
-        vendor=DBVendors.MYSQL.value,
+        vendor=DBVendor.MYSQL,
         process_exit_on_error=True,
         should_return_client=False
     )
@@ -71,7 +71,7 @@ def prepare_data_chunks(
         conversion=conversion,
         caller=prepare_data_chunks.__name__,
         sql=sql,
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=True,
         should_return_client=False,
         client=None,

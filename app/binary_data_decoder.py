@@ -16,7 +16,7 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import app.db_access as DBAccess
-from app.db_vendors import DBVendors
+from app.db_vendor import DBVendor
 from app.fs_ops import log
 from app.conversion import Conversion
 from app.concurrency_manager import run_concurrently
@@ -35,7 +35,7 @@ def decode(conversion: Conversion) -> None:
         conversion=conversion,
         caller=decode.__name__,
         sql=sql,
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=False,
         should_return_client=False
     )
@@ -65,7 +65,7 @@ def _decode(
         conversion=conversion,
         caller=_decode.__name__,
         sql=sql,
-        vendor=DBVendors.PG.value,
+        vendor=DBVendor.PG,
         process_exit_on_error=False,
         should_return_client=False
     )
