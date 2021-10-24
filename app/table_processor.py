@@ -15,7 +15,9 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-import app.db_Access as DBAccess
+from typing import cast, Any
+
+import app.db_access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
 from app.db_vendor import DBVendor
 from app.fs_ops import log
@@ -28,7 +30,7 @@ def create_table(conversion: Conversion, table_name: str) -> None:
     Migrates structure of a single table to the target server.
     """
     log_path = conversion.dic_tables[table_name].table_log_path
-    log(conversion, f'\t--[{create_table.__name__}] Currently creating table: `{table_name}`', log_path)
+    log(conversion, f'[{create_table.__name__}] Currently creating table: `{table_name}`', log_path)
     original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
     show_columns_result = DBAccess.query(
         conversion=conversion,
@@ -42,7 +44,8 @@ def create_table(conversion: Conversion, table_name: str) -> None:
     if show_columns_result.error:
         return
 
-    conversion.dic_tables[table_name].table_columns = show_columns_result.data
+    show_columns_result_data = cast(list[dict[str, Any]], show_columns_result.data)
+    conversion.dic_tables[table_name].table_columns = show_columns_result_data
 
     if conversion.should_migrate_only_data():
         return
@@ -55,7 +58,7 @@ def create_table(conversion: Conversion, table_name: str) -> None:
         col_type = map_data_types(conversion.data_types_map, input_dict['Type'])
         return f'"{col_name}" {col_type}'
 
-    sql_columns = ','.join([_get_column_definition(input_dict) for input_dict in show_columns_result.data])
+    sql_columns = ','.join([_get_column_definition(input_dict) for input_dict in show_columns_result_data])
     create_table_result = DBAccess.query(
         conversion=conversion,
         caller=create_table.__name__,
@@ -66,7 +69,7 @@ def create_table(conversion: Conversion, table_name: str) -> None:
     )
 
     if not create_table_result.error:
-        success_message = f'\t--[{create_table.__name__}] Table "{conversion.schema}"."{table_name}" is created'
+        success_message = f'[{create_table.__name__}] Table "{conversion.schema}"."{table_name}" is created'
         log(conversion, success_message, log_path)
 
 

@@ -104,7 +104,7 @@ def create_sequence(conversion: Conversion, table_name: str) -> None:
     )
 
     if not set_sequence_value_result.error:
-        msg = f'\t--[{create_sequence.__name__}] Sequence "{conversion.schema}"."{seq_name}" is created...'
+        msg = f'[{create_sequence.__name__}] Sequence "{conversion.schema}"."{seq_name}" is created...'
         log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
 
 
@@ -141,5 +141,5 @@ def set_sequence_value(conversion: Conversion, table_name: str) -> None:
     )
 
     if not result.error:
-        msg = f'\t--[{set_sequence_value.__name__}] Sequence "{conversion.schema}"."{seq_name}" is created...'
+        msg = f'[{set_sequence_value.__name__}] Sequence "{conversion.schema}"."{seq_name}" is created...'
         log(conversion, msg, conversion.dic_tables[table_name].table_log_path)

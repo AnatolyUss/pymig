@@ -15,7 +15,7 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-from typing import Union
+from typing import Union, cast, Any
 
 import app.extra_config_processor as ExtraConfigProcessor
 import app.db_access as DBAccess
@@ -42,9 +42,10 @@ def create_indexes(conversion: Conversion, table_name: str) -> None:
     if show_index_result.error:
         return
 
-    pg_indexes = {}
+    pg_indexes: dict[str, dict[str, Union[str, int, list[str]]]] = {}
+    show_index_result_data = cast(list[dict[str, Any]], show_index_result.data)
 
-    for index in show_index_result.data:
+    for index in show_index_result_data:
         pg_column_name = ExtraConfigProcessor.get_column_name(
             conversion=conversion,
             original_table_name=original_table_name,
@@ -53,7 +54,7 @@ def create_indexes(conversion: Conversion, table_name: str) -> None:
         )
 
         if index['Key_name'] in pg_indexes:
-            pg_indexes[index['Key_name']]['column_name'].append(f'"{pg_column_name}"')
+            cast(list[str], pg_indexes[index['Key_name']]['column_name']).append(f'"{pg_column_name}"')
             continue
 
         pg_index_type = 'GIST' if index['Index_type'] == 'SPATIAL' else index['Index_type']
@@ -70,7 +71,7 @@ def create_indexes(conversion: Conversion, table_name: str) -> None:
 
     run_concurrently(conversion, _set_index, params)
 
-    msg = f'\t--[{create_indexes.__name__}] "{conversion.schema}"."{table_name}": PK/indices are successfully set...'
+    msg = f'[{create_indexes.__name__}] "{conversion.schema}"."{table_name}": PK/indices are successfully set...'
     log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
 
 
@@ -87,16 +88,19 @@ def _set_index(
     sql_add_index = ''
 
     if index_name.lower() == 'primary':
-        primary_key = ','.join(pg_indexes[index_name]['column_name'])
+        column_names_list = cast(dict[str, Union[str, int, list[str]]], pg_indexes[index_name])
+        primary_key = ','.join(cast(list[str], column_names_list['column_name']))
         sql_add_index += f'ALTER TABLE "{conversion.schema}"."{table_name}" ADD PRIMARY KEY({primary_key});'
     else:
-        column_name = f"{pg_indexes[index_name]['column_name'][0][1:-1]}{str(idx)}"
-        index_type = 'UNIQUE' if pg_indexes[index_name]['is_unique'] else ''
+        pg_index_name = cast(dict[str, Union[str, int, list[str]]], pg_indexes[index_name])
+        column_name_list = cast(list[str], pg_index_name['column_name'])
+        column_name = f"{column_name_list[0][1:-1]}{str(idx)}"
+        index_type = 'UNIQUE' if pg_index_name['is_unique'] else ''
         sql_add_index += f'CREATE {index_type} INDEX'
         sql_add_index += f' "{conversion.schema}_{table_name}_{column_name}_idx"'
         sql_add_index += f' ON "{conversion.schema}"."{table_name}"'
-        sql_add_index += f" {pg_indexes[index_name]['index_type']} "
-        sql_add_index += f"({','.join(pg_indexes[index_name]['column_name'])});"
+        sql_add_index += f" {pg_index_name['index_type']} "
+        sql_add_index += f"({','.join(cast(list[str], pg_index_name['column_name']))});"
 
     DBAccess.query(
         conversion=conversion,

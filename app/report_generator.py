@@ -36,7 +36,7 @@ def generate_report(conversion: Conversion, last_message: str) -> None:
     formatted_hours = f'0{hours}' if hours < 10 else f'{hours}'
     formatted_minutes = f'0{minutes}' if minutes < 10 else f'{minutes}'
     formatted_seconds = f'0{seconds}' if seconds < 10 else f'{seconds}'
-    output = (f'\n\t--[{log_title}] {last_message}\n\t--[{log_title}] '
+    output = (f'[{log_title}] {last_message}\n\t--[{log_title}] '
               f'Total time: {formatted_hours}:{formatted_minutes}:{formatted_seconds}\n'
               f'\t--[{log_title}] (hours:minutes:seconds)')
 

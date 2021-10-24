@@ -16,6 +16,7 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import os
+from typing import cast, Any
 
 import app.migration_state_manager as MigrationStateManager
 import app.db_access as DBAccess
@@ -55,10 +56,11 @@ def _generate_single_view(conversion: Conversion, view_name: str) -> None:
     if show_create_view_result.error:
         return
 
+    show_create_view_result_data = cast(list[dict[str, Any]], show_create_view_result.data)
     create_pg_view_sql = _generate_view_code(
         schema=conversion.schema,
         view_name=view_name,
-        mysql_view_code=show_create_view_result.data[0]['Create View']
+        mysql_view_code=show_create_view_result_data[0]['Create View']
     )
 
     create_pg_view_result = DBAccess.query(
@@ -75,7 +77,7 @@ def _generate_single_view(conversion: Conversion, view_name: str) -> None:
         _log_not_created_view(conversion, view_name, create_pg_view_sql)
         return
 
-    log(conversion, f'\t--[{_generate_single_view.__name__}] View "{conversion.schema}"."{view_name}" is created...')
+    log(conversion, f'[{_generate_single_view.__name__}] View "{conversion.schema}"."{view_name}" is created...')
 
 
 def _log_not_created_view(

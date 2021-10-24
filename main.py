@@ -27,8 +27,7 @@ from app.report_generator import generate_report
 from app.migration_state_manager import create_state_logs_table, create_data_pool_table, read_data_pool
 from app.structure_loader import load_structure
 from app.constraints_processor import process_constraints
-
-from DataLoader import DataLoader
+from app.data_loader import send_data
 
 
 if __name__ == '__main__':
@@ -45,7 +44,7 @@ if __name__ == '__main__':
     create_data_pool_table(conversion)
     load_structure(conversion)
     read_data_pool(conversion)
-    DataLoader.send_data(conversion)
+    send_data(conversion)
     decode(conversion)
     process_constraints(conversion)
     DBAccess.close_connection_pools(conversion)

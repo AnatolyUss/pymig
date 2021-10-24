@@ -46,9 +46,9 @@
 
     "encoding_description" : [
         "Python encoding type.",
-        "If not supplied, then utf_8 will be used as a default."
+        "If not supplied, then utf-8 will be used as a default."
     ],
-    "encoding" : "utf_8",
+    "encoding" : "utf-8",
 
     "schema_description" : [
         "A name of the schema, that will contain all migrated tables.",

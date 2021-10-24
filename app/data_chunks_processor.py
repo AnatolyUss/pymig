@@ -16,6 +16,7 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import json
+from typing import cast, Any
 
 import app.db_access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
@@ -53,8 +54,9 @@ def prepare_data_chunks(
         should_return_client=False
     )
 
-    rows_cnt = int(rows_cnt_result.data[0]['rows_count'])
-    msg = (f'\t--[{prepare_data_chunks.__name__}] Total rows to insert into'
+    rows_cnt_result_data = cast(list[dict[str, Any]], rows_cnt_result.data)
+    rows_cnt = int(rows_cnt_result_data[0]['rows_count'])
+    msg = (f'[{prepare_data_chunks.__name__}] Total rows to insert into'
            f' "{conversion.schema}"."{table_name}": {rows_cnt}')
 
     log(conversion, msg, log_path)

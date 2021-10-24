@@ -20,9 +20,12 @@ from app.utils import get_index_of
 
 def arrange_columns_data(table_columns: list[dict], mysql_version: str) -> str:
     """
+    TODO: must pass encoding.
     Arranges columns data before loading.
+    Notice, the "inline" columns encoding conversion cannot be implemented,
+    since MySQL's UTF-8 implementation isn't the same as PostgreSQL's one.
     """
-    select_field_list = ''
+    select_fields_list = []
     wkb_func = 'ST_AsWKB' if float(mysql_version) >= 5.76 else 'AsWKB'
 
     for column in table_columns:
@@ -30,20 +33,20 @@ def arrange_columns_data(table_columns: list[dict], mysql_version: str) -> str:
 
         if is_spacial(col_type):
             # Apply HEX(ST_AsWKB(...)) due to the issue, described at https://bugs.mysql.com/bug.php?id=69798
-            select_field_list += f'HEX({wkb_func}(`{col_field}`)) AS `{col_field}`,'
+            select_fields_list.append(f'HEX({wkb_func}(`{col_field}`)) AS `{col_field}`')
         elif is_binary(col_type):
-            select_field_list += f'HEX(`{col_field}`) AS `{col_field}`,'
+            select_fields_list.append(f'HEX(`{col_field}`) AS `{col_field}`')
         elif is_bit(col_type):
-            select_field_list += f'BIN(`{col_field}`) AS `{col_field}`,'
+            select_fields_list.append('BIN(`{0}`) AS `{0}`'.format(col_field))
         elif is_date_time(col_type):
-            select_field_list += (f"IF(`{col_field}` IN('0000-00-00', '0000-00-00 00:00:00'),"
-                                  f" '-INFINITY', CAST(`{col_field}` AS CHAR)) AS `{col_field}`,")
+            select_fields_list.append(f"IF(`{col_field}` IN('0000-00-00', '0000-00-00 00:00:00'),"
+                                      f" '-INFINITY', CAST(`{col_field}` AS CHAR)) AS `{col_field}`")
         elif is_numeric(col_type):
-            select_field_list += f"`{col_field}` AS `{col_field}`,"
+            select_fields_list.append(f"`{col_field}` AS `{col_field}`")
         else:
-            select_field_list += f"`{col_field}` AS `{col_field}`,"
+            select_fields_list.append(f"`{col_field}` AS `{col_field}`")
 
-    return select_field_list[0:-1]
+    return ','.join(select_fields_list)
 
 
 def is_numeric(data_type: str) -> bool:

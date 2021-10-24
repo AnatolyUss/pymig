@@ -17,6 +17,7 @@ __license__ = """
 """
 import time
 import sys
+from typing import cast, Any
 
 import app.db_access as DBAccess
 from app.db_vendor import DBVendor
@@ -31,13 +32,13 @@ def boot(conversion: Conversion) -> None:
     connection_error_message = _check_connection(conversion)
 
     if connection_error_message:
-        error_message = f'\t --[{boot.__name__}] {connection_error_message}'
+        error_message = f'[{boot.__name__}] {connection_error_message}'
         generate_error(conversion, error_message)
         sys.exit(1)
 
     table_name = conversion.schema + conversion.mysql_db_name
     sql = ("SELECT EXISTS(SELECT 1 FROM information_schema.tables"
-           f"WHERE table_schema = '{conversion.schema}' AND table_name = '{table_name}') AS state_logs_table_exist;")
+           f" WHERE table_schema = '{conversion.schema}' AND table_name = '{table_name}') AS state_logs_table_exist;")
 
     result = DBAccess.query(
         conversion=conversion,
@@ -48,7 +49,8 @@ def boot(conversion: Conversion) -> None:
         should_return_client=False
     )
 
-    state_logs_table_exist = result.data[0]['state_logs_table_exist']
+    result_data = cast(list[dict[str, Any]], result.data)
+    state_logs_table_exist = result_data[0]['state_logs_table_exist']
     recovery_state_message = (f'''\n\t--[{boot.__name__}] FromMySqlToPostgreSql is ready to restart after some failure.
                               \n\t--[{boot.__name__}] Consider checking log files at the end of migration''')
 

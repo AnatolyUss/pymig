@@ -15,6 +15,8 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from typing import cast, Union
+
 import app.db_access as DBAccess
 import app.migration_state_manager as MigrationStateManager
 import app.extra_config_processor as ExtraConfigProcessor
@@ -41,7 +43,7 @@ def _get_foreign_keys_metadata(conversion: Conversion, table_name: str) -> None:
     """
     Retrieves foreign keys metadata.
     """
-    msg = (f'\t--[{_get_foreign_keys_metadata.__name__}]'
+    msg = (f'[{_get_foreign_keys_metadata.__name__}]'
            f' Search foreign keys for table "{conversion.schema}"."{table_name}"...')
 
     log(conversion, msg)
@@ -85,7 +87,7 @@ def _get_foreign_keys_metadata(conversion: Conversion, table_name: str) -> None:
     extra_rows = ExtraConfigProcessor.parse_foreign_keys(conversion, table_name)
     full_rows = (result.data or []) + extra_rows
     _set_foreign_keys_for_given_table(conversion, table_name, full_rows)
-    msg = (f'\t--[{_get_foreign_keys_metadata.__name__}]'
+    msg = (f'[{_get_foreign_keys_metadata.__name__}]'
            f' Foreign keys for table "{conversion.schema}"."{table_name}" are set...')
 
     log(conversion, msg)
@@ -99,7 +101,7 @@ def _set_foreign_keys_for_given_table(
     """
     Sets foreign keys for given table.
     """
-    constraints = {}
+    constraints: dict[str, dict[str, Union[str, list[str]]]] = {}
     original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
 
     for row in rows:
@@ -130,8 +132,14 @@ def _set_foreign_keys_for_given_table(
         )
 
         if row['CONSTRAINT_NAME'] in constraints:
-            constraints[row['CONSTRAINT_NAME']]['column_name'].append(f'"{current_column_name}"')
-            constraints[row['CONSTRAINT_NAME']]['referenced_column_name'].append(f'"{current_referenced_column_name}"')
+            constraint_column_name = cast(list[str], constraints[row['CONSTRAINT_NAME']]['column_name'])
+            constraint_referenced_column_name = cast(
+                list[str],
+                constraints[row['CONSTRAINT_NAME']]['referenced_column_name']
+            )
+
+            constraint_column_name.append(f'"{current_column_name}"')
+            constraint_referenced_column_name.append(f'"{current_referenced_column_name}"')
             return
 
         constraints[row['CONSTRAINT_NAME']] = {}

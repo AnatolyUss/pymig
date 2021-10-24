@@ -21,14 +21,14 @@ from dbutils.pooled_db import PooledDedicatedDBConnection
 
 
 class DBAccessQueryResult:
-    client: PooledDedicatedDBConnection
-    data: Optional[dict[str, Any]]
+    client: Optional[PooledDedicatedDBConnection]
+    data: Optional[list[dict[str, Any]]]
     error: Optional[Exception]
 
     def __init__(
         self,
-        client: PooledDedicatedDBConnection,
-        data: Optional[dict[str, Any]],
+        client: Optional[PooledDedicatedDBConnection],
+        data: Optional[list[dict[str, Any]]],
         error: Optional[Exception]
     ):
         """

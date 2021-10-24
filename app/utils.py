@@ -18,7 +18,7 @@ __license__ = """
 from typing import Union
 
 
-def get_index_of(needle: str, haystack: Union[str, list[str]]) -> int:
+def get_index_of(needle: str, haystack: Union[str, list[str], tuple[str]]) -> int:
     """
     Returns an index of given needle in the haystack.
     The needle can be a variable of any type.

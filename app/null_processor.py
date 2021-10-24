@@ -28,7 +28,7 @@ def process_null(conversion: Conversion, table_name: str) -> None:
     Defines which columns of the given table can contain the "NULL" value.
     Sets an appropriate constraint.
     """
-    msg = f'\t--[{process_null.__name__}] Sets "NOT NULL" constraints for table: "{conversion.schema}"."{table_name}"'
+    msg = f'[{process_null.__name__}] Sets "NOT NULL" constraints for table: "{conversion.schema}"."{table_name}"'
     log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
     original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
     params = [
@@ -66,5 +66,5 @@ def _set_not_null(
     )
 
     if not result.error:
-        msg = f'\t--[{_set_not_null.__name__}] Set NOT NULL for "{conversion.schema}"."{table_name}"."{column_name}"...'
+        msg = f'[{_set_not_null.__name__}] Set NOT NULL for "{conversion.schema}"."{table_name}"."{column_name}"...'
         log(conversion, msg, conversion.dic_tables[table_name].table_log_path)

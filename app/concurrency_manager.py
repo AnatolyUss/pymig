@@ -50,6 +50,6 @@ def run_concurrently(
             data = future.result()
             parallel_execution_result.append(data)
         except Exception as e:
-            generate_error(conversion, e)
+            generate_error(conversion, repr(e))
 
     return parallel_execution_result

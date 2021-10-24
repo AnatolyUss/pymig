@@ -70,7 +70,7 @@ class Conversion:
         self.not_created_views_path = os.path.join(self.logs_dir_path, 'not_created_views')
         self.exclude_tables = self.config['exclude_tables'] if 'exclude_tables' in self.config else []
         self.include_tables = self.config['include_tables'] if 'include_tables' in self.config else []
-        self.encoding = self.config['encoding'] if 'encoding' in self.config else 'utf_8'
+        self.encoding = self.config['encoding'] if 'encoding' in self.config else 'utf-8'
         self.time_begin = None
         self.mysql_version = '5.6.21'
         self.extra_config = self.config['extra_config'] if 'extra_config' in self.config else {}

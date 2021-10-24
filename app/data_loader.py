@@ -16,7 +16,7 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import io
-from typing import Optional
+from typing import Optional, Any, Union, cast
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import (
     cpu_count,
@@ -36,6 +36,11 @@ from app.conversion import Conversion
 from app.constraints_processor import process_constraints_per_table
 
 
+# According to Python docs:
+# https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+MAX_WORKER_PROCESSES_DEFAULT = 61
+
+
 def send_data(conversion: Conversion) -> None:
     """
     Sends the data to the loader processes.
@@ -43,12 +48,17 @@ def send_data(conversion: Conversion) -> None:
     if len(conversion.data_pool) == 0:
         return
 
-    params_list = [[conversion.config, meta] for meta in conversion.data_pool]
+    params_list: list[list[Union[MultiprocessingConnection.Connection, dict[str, Any]]]] = [
+        [conversion.config, meta]
+        for meta in conversion.data_pool
+    ]
+
     reader_connections = []
     number_of_workers = min(
         conversion.max_each_db_connection_pool_size,
         len(conversion.data_pool),
-        cpu_count()
+        cpu_count(),
+        MAX_WORKER_PROCESSES_DEFAULT,
     )
 
     with ProcessPoolExecutor(max_workers=number_of_workers) as executor:
@@ -60,14 +70,15 @@ def send_data(conversion: Conversion) -> None:
             executor.submit(_load, *params)
 
         while reader_connections:
-            for reader_connection in MultiprocessingConnection.wait(object_list=reader_connections):
+            for _reader_connection in MultiprocessingConnection.wait(object_list=reader_connections):
+                _reader_connection = cast(MultiprocessingConnection.Connection, _reader_connection)
                 just_populated_table_name = ''
 
                 try:
-                    just_populated_table_name = reader_connection.recv()
-                    reader_connection.close()
+                    just_populated_table_name = _reader_connection.recv()
+                    _reader_connection.close()
                 finally:
-                    reader_connections.remove(reader_connection)
+                    reader_connections.remove(_reader_connection)
                     process_constraints_per_table(conversion, just_populated_table_name)
 
     MigrationStateManager.set(conversion, 'per_table_constraints_loaded')
@@ -76,14 +87,14 @@ def send_data(conversion: Conversion) -> None:
 def _load(
     config: dict,
     data_pool_item: dict,
-    connection_to_master: MultiprocessingConnection
+    connection_to_master: MultiprocessingConnection.Connection
 ) -> None:
     """
     Loads the data using separate process.
     """
     conversion = Conversion(config)
     table_name = data_pool_item['_tableName']
-    msg = f'\t--[{_load.__name__}] Loading the data into "{conversion.schema}"."{table_name}" table...'
+    msg = f'[{_load.__name__}] Loading the data into "{conversion.schema}"."{table_name}" table...'
     log(conversion, msg)
     is_recovery_mode = data_transferred(conversion, data_pool_item['_id'])
 
@@ -108,7 +119,7 @@ def populate_table_worker(
     str_select_field_list: str,
     rows_cnt: int,
     data_pool_id: int,
-    connection_to_master: MultiprocessingConnection
+    connection_to_master: MultiprocessingConnection.Connection
 ) -> None:
     """
     Loads a chunk of data using "PostgreSQL COPY".
@@ -123,7 +134,11 @@ def populate_table_worker(
         mysql_cursor = mysql_client.cursor()
         mysql_cursor.execute(sql)
         number_of_inserted_rows = 0
-        number_of_workers = min(conversion.max_each_db_connection_pool_size / 2, cpu_count())
+        number_of_workers = min(
+            int(conversion.max_each_db_connection_pool_size / 2),
+            cpu_count(),
+            MAX_WORKER_PROCESSES_DEFAULT,
+        )
 
         with ProcessPoolExecutor(max_workers=number_of_workers) as executor:
             while True:
@@ -145,14 +160,14 @@ def populate_table_worker(
                 )
     except Exception as e:
         msg = 'Data retrieved by following MySQL query has been rejected by the target PostgreSQL server.'
-        error_message = f'\t--[{populate_table_worker.__name__}] {e}\n\t--[{populate_table_worker.__name__}] {msg}'
+        error_message = f'[{populate_table_worker.__name__}] {e}\n\t--[{populate_table_worker.__name__}] {msg}'
         generate_error(conversion, error_message, sql)
     finally:
         try:
             connection_to_master.send(table_name)
         except Exception as ex:
             msg = f'Failed to notify master that {table_name} table\'s populating is finished.'
-            error_message = f'\t--[{populate_table_worker.__name__}] {ex}\n\t--[{populate_table_worker.__name__}] {msg}'
+            error_message = f'[{populate_table_worker.__name__}] {ex}\n\t--[{populate_table_worker.__name__}] {msg}'
             generate_error(conversion, error_message)
         finally:
             for resource in (connection_to_master, text_stream, pg_cursor, mysql_cursor, mysql_client):
@@ -183,7 +198,16 @@ def _arrange_and_load_batch(
             # TODO: how to pass original_session_replication_role to the parent?
             original_session_replication_role = disable_triggers(conversion, pg_client)
 
-        rows = pd.DataFrame(batch).to_csv(index=False, header=False, encoding='utf-8', na_rep='\\N', sep='\t')
+        # Notice, the "inline" columns encoding conversion cannot be implemented,
+        # since MySQL's UTF-8 implementation isn't the same as PostgreSQL's one.
+        rows = pd.DataFrame(batch).to_csv(
+            index=False,
+            header=False,
+            encoding=conversion.encoding,
+            na_rep='\\N',
+            sep='\t',
+        )
+
         text_stream = io.StringIO()
         text_stream.write(rows)
         text_stream.seek(0)
@@ -191,14 +215,13 @@ def _arrange_and_load_batch(
         pg_client.commit()
 
         number_of_inserted_rows += rows_to_insert
-        msg = (f'\t--[{_arrange_and_load_batch.__name__}] For now inserted: {number_of_inserted_rows} rows, '
+        msg = (f'[{_arrange_and_load_batch.__name__}] For now inserted: {number_of_inserted_rows} rows, '
                f'Total rows to insert into "{conversion.schema}"."{table_name}": {rows_cnt}')
 
         print(msg)  # TODO: check why log() below doesn't work as expected.
         log(conversion, msg)
     except Exception as e:
-        msg = 'Data retrieved by following MySQL query has been rejected by the target PostgreSQL server.'
-        error_message = f'\t--[{_arrange_and_load_batch.__name__}] {e}\n\t--[{_arrange_and_load_batch.__name__}] {msg}'
+        error_message = f'[{_arrange_and_load_batch.__name__}] {type(e).__name__} {repr(e)}'
         generate_error(conversion, error_message)
 
 
@@ -206,7 +229,7 @@ def delete_data_pool_item(
     conversion: Conversion,
     data_pool_id: int,
     pg_client: PooledDedicatedDBConnection,
-    original_session_replication_role: Optional[str]
+    original_session_replication_role: Optional[str] = None
 ) -> None:
     """
     Deletes given record from the data-pool.
@@ -223,7 +246,7 @@ def delete_data_pool_item(
         client=pg_client
     )
 
-    log(conversion, f'\t--[{delete_data_pool_item.__name__}] Deleted #{data_pool_id} from data-pool')
+    log(conversion, f'[{delete_data_pool_item.__name__}] Deleted #{data_pool_id} from data-pool')
 
     if original_session_replication_role and result.client:
         enable_triggers(conversion, result.client, original_session_replication_role)
@@ -301,7 +324,8 @@ def data_transferred(conversion: Conversion, data_pool_id: int) -> bool:
         should_return_client=True
     )
 
-    metadata = result.data[0]['metadata']
+    result_data = cast(list[dict[str, Any]], result.data)
+    metadata = result_data[0]['metadata']
     table_name = metadata['_tableName']
     target_table_name = f'"{conversion.schema}"."{table_name}"'
 
@@ -315,4 +339,5 @@ def data_transferred(conversion: Conversion, data_pool_id: int) -> bool:
         client=result.client
     )
 
-    return len(probe.data) != 0
+    probe_data = cast(list[dict[str, Any]], probe.data)
+    return len(probe_data) != 0

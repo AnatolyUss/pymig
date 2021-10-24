@@ -77,7 +77,7 @@ def _get_pooled_db(
             'client_encoding': db_connection_details['charset'],
         })
     else:
-        generate_error(conversion, f'\t --[{_get_pooled_db.__name__}] unknown db_vendor {db_vendor.value}')
+        generate_error(conversion, f'[{_get_pooled_db.__name__}] unknown db_vendor {db_vendor.value}')
         sys.exit(1)
 
     return PooledDB(**connection_details)
@@ -92,7 +92,7 @@ def close_connection_pools(conversion: Conversion) -> None:
             try:
                 pool.close()
             except Exception as e:
-                generate_error(conversion, f'\t--[{close_connection_pools.__name__}] {repr(e)}')
+                generate_error(conversion, f'[{close_connection_pools.__name__}] {repr(e)}')
 
 
 def get_mysql_unbuffered_client(conversion: Conversion) -> PymysqlConnection:
@@ -119,12 +119,12 @@ def get_db_client(
     """
     if db_vendor == DBVendor.PG:
         _ensure_pg_connection(conversion)
-        return conversion.pg.connection(shareable=False)
+        return conversion.pg.connection(shareable=False)  # type: ignore
     elif db_vendor == DBVendor.MYSQL:
         _ensure_mysql_connection(conversion)
-        return conversion.mysql.connection(shareable=False)
+        return conversion.mysql.connection(shareable=False)  # type: ignore
     else:
-        generate_error(conversion, f'\t --[{get_db_client.__name__}] unexpected db_vendor {db_vendor.value}')
+        generate_error(conversion, f'[{get_db_client.__name__}] unexpected db_vendor {db_vendor.value}')
         sys.exit(1)
 
 
@@ -140,7 +140,7 @@ def release_db_client(
             client.close()
             client = None
         except Exception as e:
-            generate_error(conversion, f'\t--[{release_db_client.__name__}] {repr(e)}')
+            generate_error(conversion, f'[{release_db_client.__name__}] {repr(e)}')
 
 
 def _release_db_client_if_necessary(
@@ -191,15 +191,15 @@ def query(
     except psycopg2.ProgrammingError as programming_error:
         if should_return_programming_error:
             error = programming_error
-            generate_error(conversion, f'\t--[{caller}] {repr(error)}', sql)
+            generate_error(conversion, f'[{caller}] {repr(error)}', sql)
 
             if process_exit_on_error:
                 sys.exit(1)
 
         data = []
     except Exception as e:
-        error = e
-        generate_error(conversion, f'\t--[{caller}] {repr(e)}', sql)
+        error = e  # type: ignore
+        generate_error(conversion, f'[{caller}] {repr(e)}', sql)
 
         if process_exit_on_error:
             sys.exit(1)
@@ -233,15 +233,15 @@ def query_without_transaction(
         }
 
         client = psycopg2.connect(**connection_details)
-        client.set_isolation_level(0)
+        client.set_isolation_level(0)  # type: ignore
         cursor = client.cursor()
-        cursor.execute(sql)
+        cursor.execute(sql)  # type: ignore
     except Exception as e:
         error = e
-        generate_error(conversion, f'\t--[{caller}] {e}', sql)
+        generate_error(conversion, f'[{caller}] {e}', sql)
     finally:
         if cursor:
-            cursor.close()
+            cursor.close()  # type: ignore
 
     release_db_client(conversion, client)
     return DBAccessQueryResult(client=None, data=None, error=error)

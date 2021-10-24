@@ -15,6 +15,8 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from typing import cast
+
 import app.db_access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
 from app.conversion import Conversion
@@ -29,7 +31,7 @@ def process_enum(conversion: Conversion, table_name: str) -> None:
     Defines which columns of the given table are of type "enum".
     Sets an appropriate constraint, if appropriate.
     """
-    msg = f'\t--[{process_enum.__name__}] Defines "ENUMs" for table "{conversion.schema}"."{table_name}"'
+    msg = f'[{process_enum.__name__}] Defines "ENUMs" for table "{conversion.schema}"."{table_name}"'
     log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
     original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
     params = [
@@ -46,7 +48,7 @@ def _is_enum(column: dict) -> bool:
     Checks if given column is of type enum.
     """
     if get_index_of('(', column['Type']) != -1:
-        list_type = column['Type'].split('(')
+        list_type = cast(list[str], column['Type'].split('('))
         return list_type[0] == 'enum'
 
     return False
@@ -81,5 +83,5 @@ def _set_enum(
     )
 
     if not result.error:
-        msg = f'\t--[{_set_enum.__name__}] Set "ENUM" for "{conversion.schema}"."{table_name}"."{column_name}"...'
+        msg = f'[{_set_enum.__name__}] Set "ENUM" for "{conversion.schema}"."{table_name}"."{column_name}"...'
         log(conversion, msg, conversion.dic_tables[table_name].table_log_path)

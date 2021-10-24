@@ -15,6 +15,8 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from typing import cast, Any
+
 import app.db_access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
 from app.fs_ops import log
@@ -27,7 +29,7 @@ def process_comments(conversion: Conversion, table_name: str) -> None:
     """
     Migrates comments.
     """
-    msg = f'\t--[{process_comments.__name__}] Creates comments for table "{conversion.schema}"."{table_name}"...'
+    msg = f'[{process_comments.__name__}] Creates comments for table "{conversion.schema}"."{table_name}"...'
     log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
     _process_table_comments(conversion, table_name)
     _process_columns_comments(conversion, table_name)
@@ -53,7 +55,8 @@ def _process_table_comments(conversion: Conversion, table_name: str) -> None:
     if select_comments_result.error:
         return
 
-    comment = _escape_quotes(select_comments_result.data[0]['table_comment'])
+    select_comments_result_data = cast(list[dict[str, Any]], select_comments_result.data)
+    comment = _escape_quotes(select_comments_result_data[0]['table_comment'])
     sql_create_comment = f'COMMENT ON TABLE "{conversion.schema}"."{table_name}" IS \'{comment}\';'
     create_comment_result = DBAccess.query(
         conversion=conversion,
@@ -67,7 +70,7 @@ def _process_table_comments(conversion: Conversion, table_name: str) -> None:
     if create_comment_result.error:
         return
 
-    msg = (f'\t--[{_process_table_comments.__name__}]'
+    msg = (f'[{_process_table_comments.__name__}]'
            f' Successfully set comment for table "{conversion.schema}"."{table_name}"')
 
     log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
@@ -116,7 +119,7 @@ def _set_column_comment(
     if create_comment_result.error:
         return
 
-    msg = (f'\t--[{_set_column_comment.__name__}] Set comment for'
+    msg = (f'[{_set_column_comment.__name__}] Set comment for'
            f' "{conversion.schema}"."{table_name}" column: "{column_name}"...')
 
     log(conversion, msg, conversion.dic_tables[table_name].table_log_path)

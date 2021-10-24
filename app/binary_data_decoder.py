@@ -15,6 +15,8 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from typing import cast, Any
+
 import app.db_access as DBAccess
 from app.db_vendor import DBVendor
 from app.fs_ops import log
@@ -26,7 +28,7 @@ def decode(conversion: Conversion) -> None:
     """
     Decodes binary data from from textual representation.
     """
-    log(conversion, f'\t--[{decode.__name__}] Decoding binary data from textual representation')
+    log(conversion, f'[{decode.__name__}] Decoding binary data from textual representation')
     sql = ("SELECT table_name, column_name FROM information_schema.columns"
            f" WHERE table_catalog = '{conversion.target_con_string['database']}'"
            f" AND table_schema = '{conversion.schema}' AND data_type IN ('bytea', 'geometry');")
@@ -44,7 +46,8 @@ def decode(conversion: Conversion) -> None:
         # No need to continue if no 'bytea' or 'geometry' columns found.
         return
 
-    params = [[conversion, record['table_name'], record['column_name']] for record in result.data]
+    result_data = cast(list[dict[str, Any]], result.data)
+    params = [[conversion, record['table_name'], record['column_name']] for record in result_data]
     run_concurrently(conversion, _decode, params)
 
 
@@ -71,7 +74,7 @@ def _decode(
     )
 
     if not result.error:
-        msg = (f'\t--[{_decode.__name__}] Decoded binary data from textual representation'
+        msg = (f'[{_decode.__name__}] Decoded binary data from textual representation'
                f' for table "{conversion.schema}"."{table_name}"')
 
         log(conversion, msg)

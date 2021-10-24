@@ -30,7 +30,7 @@ def process_default(conversion: Conversion, table_name: str) -> None:
     Determines which columns of the given table have default value.
     Sets default values where appropriate.
     """
-    msg = f'\t--[{process_default.__name__}] Determines default values for table: "{conversion.schema}"."{table_name}"'
+    msg = f'[{process_default.__name__}] Determines default values for table: "{conversion.schema}"."{table_name}"'
     log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
     original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
     pg_numeric_types = ('money', 'numeric', 'decimal', 'double precision', 'real', 'bigint', 'int', 'smallint')
@@ -98,7 +98,7 @@ def _set_default(
     )
 
     if not result.error:
-        msg = (f'\t--[{_set_default.__name__}] Sets default value for'
+        msg = (f'[{_set_default.__name__}] Sets default value for'
                f' "{conversion.schema}"."{table_name}"."{column_name}"...')
 
         log(conversion, msg, conversion.dic_tables[table_name].table_log_path)

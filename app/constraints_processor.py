@@ -17,7 +17,7 @@ __license__ = """
 """
 import app.migration_state_manager as MigrationStateManager
 from app.conversion import Conversion
-from app.indexesProcessor import create_indexes
+from app.indexes_processor import create_indexes
 from app.concurrency_manager import run_concurrently
 from app.enum_processor import process_enum
 from app.sequences_processor import set_sequence_value, create_sequence

@@ -15,6 +15,8 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from typing import Any, cast
+
 import app.db_access as DBAccess
 from app.db_vendor import DBVendor
 from app.fs_ops import log
@@ -49,7 +51,8 @@ def get(conversion: Conversion, param: str) -> bool:
         should_return_client=False
     )
 
-    return result.data[0][param]
+    records = cast(list[dict[str, Any]], result.data)
+    return cast(bool, records[0][param])
 
 
 def set(conversion: Conversion, *states: str) -> None:
@@ -82,7 +85,7 @@ def create_data_pool_table(conversion: Conversion) -> None:
         should_return_client=False
     )
 
-    log(conversion, f'\t--[{create_data_pool_table.__name__}] table {table_name} is created...')
+    log(conversion, f'[{create_data_pool_table.__name__}] table {table_name} is created...')
 
 
 def drop_data_pool_table(conversion: Conversion) -> None:
@@ -99,7 +102,7 @@ def drop_data_pool_table(conversion: Conversion) -> None:
         should_return_client=False
     )
 
-    log(conversion, f'\t--[{drop_data_pool_table.__name__}] table {table_name} is dropped...')
+    log(conversion, f'[{drop_data_pool_table.__name__}] table {table_name} is dropped...')
 
 
 def read_data_pool(conversion: Conversion) -> None:
@@ -116,12 +119,14 @@ def read_data_pool(conversion: Conversion) -> None:
         should_return_client=False
     )
 
-    for row in result.data:
+    results = cast(list[dict[str, Any]], result.data)
+
+    for row in results:
         metadata = row['metadata']
         metadata['_id'] = row['id']
         conversion.data_pool.append(metadata)
 
-    log(conversion, f'\t--[{read_data_pool.__name__}] Data-Pool is loaded...')
+    log(conversion, f'[{read_data_pool.__name__}] Data-Pool is loaded...')
 
 
 def create_state_logs_table(conversion: Conversion) -> None:
@@ -153,9 +158,10 @@ def create_state_logs_table(conversion: Conversion) -> None:
         client=result.client
     )
 
-    msg = f'\t--[{create_state_logs_table.__name__}] Table {table_name}'
+    msg = f'[{create_state_logs_table.__name__}] Table {table_name}'
+    results = cast(list[dict[str, Any]], result.data)
 
-    if result.data[0]['cnt'] == 0:
+    if results[0]['cnt'] == 0:
         DBAccess.query(
             conversion=conversion,
             caller=create_state_logs_table.__name__,

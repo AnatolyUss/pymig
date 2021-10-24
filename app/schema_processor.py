@@ -15,6 +15,8 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from typing import cast, Any
+
 import app.db_access as DBAccess
 from app.db_vendor import DBVendor
 from app.conversion import Conversion
@@ -33,7 +35,9 @@ def create_schema(conversion: Conversion) -> None:
         should_return_client=True
     )
 
-    if len(result.data) == 0:
+    result_data = cast(list[dict[str, Any]], result.data)
+
+    if len(result_data) == 0:
         DBAccess.query(
             conversion=conversion,
             caller=create_schema.__name__,

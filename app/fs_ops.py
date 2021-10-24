@@ -51,11 +51,18 @@ def write_to_file(path: str, mode: str, message: str) -> None:
         file.write(message)
 
 
+def _get_logs_prefix() -> str:
+    """
+    Returns logs prefix.
+    """
+    return '\t--[From-MySQL-to-PostgreSQL]'
+
+
 def generate_error(conversion: Conversion, message: str, sql: str = '') -> None:
     """
     Writes a detailed error message to the "/errors-only.log" file.
     """
-    message += f'\n\n\tSQL: {sql}\n\n' if sql else ''
+    message = _get_logs_prefix() + message + (f'\n\n\tSQL: {sql}\n\n' if sql else '')
     log(conversion, message)
     write_to_file(conversion.error_logs_path, 'a', message)
 
@@ -66,6 +73,7 @@ def log(conversion: Conversion, message: str, table_log_path: Optional[str] = No
     Writes given log to the "/all.log" file.
     If necessary, writes given log to the "/{tableName}.log" file.
     """
+    message = _get_logs_prefix() + message
     print(message)
     write_to_file(conversion.all_logs_path, 'a', f'\n{message}')
 

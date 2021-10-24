@@ -15,6 +15,8 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from typing import cast, Any
+
 import app.db_access as DBAccess
 import app.migration_state_manager as MigrationStateManager
 import app.extra_config_processor as ExtraConfigProcessor
@@ -54,8 +56,9 @@ def load_structure(conversion: Conversion) -> None:
     )
 
     thread_pool_params, tables_cnt, views_cnt = [], 0, 0
+    result_data = cast(list[dict[str, Any]], result.data)
 
-    for row in result.data:
+    for row in result_data:
         relation_name = row[f'Tables_in_{conversion.mysql_db_name}']
 
         if row['Table_type'] == 'BASE TABLE' and get_index_of(relation_name, conversion.exclude_tables) == -1:
@@ -70,9 +73,9 @@ def load_structure(conversion: Conversion) -> None:
 
     run_concurrently(conversion, process_table_before_data_loading, thread_pool_params)
 
-    msg = (f'\t--[{load_structure.__name__}] Source DB structure is loaded...\n'
+    msg = (f'[{load_structure.__name__}] Source DB structure is loaded...\n'
            f'\t--[{load_structure.__name__}] Tables to migrate: {tables_cnt}\n'
-           f'--[{load_structure.__name__}] Views to migrate: {views_cnt}')
+           f'\t--[{load_structure.__name__}] Views to migrate: {views_cnt}')
 
     log(conversion, msg)
     MigrationStateManager.set(conversion, 'tables_loaded')
@@ -104,7 +107,8 @@ def _get_mysql_version(conversion: Conversion) -> None:
     )
 
     if not result.error:
-        split_version = result.data[0]['mysql_version'].split('.')
+        result_data = cast(list[dict[str, Any]], result.data)
+        split_version = result_data[0]['mysql_version'].split('.')
         major_version = split_version[0]
         minor_version_with_postfix = ''.join(split_version[1:])
         minor_version = minor_version_with_postfix.split('-')[0]

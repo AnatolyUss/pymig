@@ -15,11 +15,12 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
+from typing import Any
 
 
 class Table:
     table_log_path: str
-    table_columns: list[str]
+    table_columns: list[dict[str, Any]]
 
     def __init__(self, table_log_path: str):
         """
