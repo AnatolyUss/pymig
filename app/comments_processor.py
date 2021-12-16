@@ -21,7 +21,6 @@ import app.db_access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
 from app.fs_ops import log
 from app.conversion import Conversion
-from app.concurrency_manager import run_concurrently
 from app.db_vendor import DBVendor
 
 
@@ -87,7 +86,7 @@ def _process_columns_comments(conversion: Conversion, table_name: str) -> None:
         if column['Comment'] != ''
     ]
 
-    run_concurrently(conversion, _set_column_comment, params)
+    conversion.run_concurrently(func=_set_column_comment, params_list=params)
 
 
 def _set_column_comment(

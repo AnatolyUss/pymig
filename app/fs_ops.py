@@ -15,8 +15,8 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-import json
 import os
+import json
 from typing import Optional, cast
 
 from app.conversion import Conversion
@@ -75,10 +75,10 @@ def log(conversion: Conversion, message: str, table_log_path: Optional[str] = No
     """
     message = _get_logs_prefix() + message
     print(message)
-    write_to_file(conversion.all_logs_path, 'a', f'\n{message}')
+    write_to_file(conversion.all_logs_path, 'a', f'\n{message}\n')
 
     if table_log_path:
-        write_to_file(table_log_path, 'a', f'\n{message}')
+        write_to_file(table_log_path, 'a', f'\n{message}\n')
 
 
 def read_config(base_dir: str, config_file_name: str = 'config.json') -> dict:

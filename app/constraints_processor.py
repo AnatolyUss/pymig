@@ -18,7 +18,6 @@ __license__ = """
 import app.migration_state_manager as MigrationStateManager
 from app.conversion import Conversion
 from app.indexes_processor import create_indexes
-from app.concurrency_manager import run_concurrently
 from app.enum_processor import process_enum
 from app.sequences_processor import set_sequence_value, create_sequence
 from app.null_processor import process_null
@@ -36,7 +35,7 @@ def process_constraints(conversion: Conversion) -> None:
 
     if not are_table_constraints_loaded:
         params = [[conversion, table_name] for table_name in conversion.tables_to_migrate]
-        run_concurrently(conversion, process_constraints_per_table, params)
+        conversion.run_concurrently(func=process_constraints_per_table, params_list=params)
 
     if conversion.should_migrate_only_data():
         MigrationStateManager.set(conversion, 'per_table_constraints_loaded', 'foreign_keys_loaded', 'views_loaded')

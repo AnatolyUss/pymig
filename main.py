@@ -32,7 +32,7 @@ from app.data_loader import send_data
 
 if __name__ == '__main__':
     print(get_introduction_message())
-    base_dir = os.getcwd()
+    base_dir = os.getenv('aux_dir', os.getcwd())
     config = read_config(base_dir)
     config = read_extra_config(config, base_dir)
     conversion = Conversion(config)

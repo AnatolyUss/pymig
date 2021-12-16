@@ -23,7 +23,6 @@ import app.db_access as DBAccess
 from app.db_vendor import DBVendor
 from app.utils import get_index_of
 from app.fs_ops import write_to_file, log
-from app.concurrency_manager import run_concurrently
 from app.conversion import Conversion
 
 
@@ -37,7 +36,7 @@ def generate_views(conversion: Conversion) -> None:
         return
 
     params = [[conversion, view_name] for view_name in conversion.views_to_migrate]
-    run_concurrently(conversion, _generate_single_view, params)
+    conversion.run_concurrently(func=_generate_single_view, params_list=params)
 
 
 def _generate_single_view(conversion: Conversion, view_name: str) -> None:

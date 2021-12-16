@@ -25,7 +25,6 @@ from app.utils import get_index_of
 from app.table import Table
 from app.fs_ops import log
 from app.conversion import Conversion
-from app.concurrency_manager import run_concurrently
 from app.table_processor import create_table
 from app.data_chunks_processor import prepare_data_chunks
 
@@ -71,8 +70,7 @@ def load_structure(conversion: Conversion) -> None:
             conversion.views_to_migrate.append(relation_name)
             views_cnt += 1
 
-    run_concurrently(conversion, process_table_before_data_loading, thread_pool_params)
-
+    conversion.run_concurrently(func=process_table_before_data_loading, params_list=thread_pool_params)
     msg = (f'[{load_structure.__name__}] Source DB structure is loaded...\n'
            f'\t--[{load_structure.__name__}] Tables to migrate: {tables_cnt}\n'
            f'\t--[{load_structure.__name__}] Views to migrate: {views_cnt}')

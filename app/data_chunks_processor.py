@@ -41,29 +41,22 @@ def prepare_data_chunks(
     original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
 
     select_field_list = arrange_columns_data(
-        conversion.dic_tables[table_name].table_columns,
-        conversion.mysql_version
+        table_columns=conversion.dic_tables[table_name].table_columns,
+        mysql_version=conversion.mysql_version,
+        encoding=conversion.encoding,
     )
 
-    rows_cnt_result = DBAccess.query(
-        conversion=conversion,
-        caller=prepare_data_chunks.__name__,
-        sql=f'SELECT COUNT(1) AS rows_count FROM `{original_table_name}`;',
-        vendor=DBVendor.MYSQL,
-        process_exit_on_error=True,
-        should_return_client=False
-    )
-
-    rows_cnt_result_data = cast(list[dict[str, Any]], rows_cnt_result.data)
-    rows_cnt = int(rows_cnt_result_data[0]['rows_count'])
+    table_data_size = _get_size(conversion=conversion, original_table_name=original_table_name)
+    rows_cnt = _get_rows_cnt(conversion=conversion, original_table_name=original_table_name)
     msg = (f'[{prepare_data_chunks.__name__}] Total rows to insert into'
            f' "{conversion.schema}"."{table_name}": {rows_cnt}')
 
     log(conversion, msg, log_path)
     meta = {
-        '_tableName': table_name,
-        '_selectFieldList': select_field_list,
-        '_rowsCnt': rows_cnt,
+        'table_name': table_name,
+        'select_field_list': select_field_list,
+        'rows_cnt': rows_cnt,
+        'table_data_size': table_data_size,
     }
 
     sql = (f'INSERT INTO "{conversion.schema}"."data_pool_{conversion.schema}{conversion.mysql_db_name}"("metadata")'
@@ -81,3 +74,40 @@ def prepare_data_chunks(
             'meta': json.dumps(meta)
         }
     )
+
+
+def _get_rows_cnt(conversion: Conversion, original_table_name: str) -> int:
+    """
+    Returns an amount of records in given MySQL table.
+    """
+    rows_cnt_result = DBAccess.query(
+        conversion=conversion,
+        caller=_get_rows_cnt.__name__,
+        sql=f'SELECT COUNT(1) AS rows_count FROM `{original_table_name}`;',
+        vendor=DBVendor.MYSQL,
+        process_exit_on_error=True,
+        should_return_client=False
+    )
+
+    rows_cnt_result_data = cast(list[dict[str, Any]], rows_cnt_result.data)
+    return int(rows_cnt_result_data[0]['rows_count'])
+
+
+def _get_size(conversion: Conversion, original_table_name: str) -> float:
+    sql = f"""
+        SELECT round((data_length / 1024 / 1024), 2) AS `size_in_mb` 
+        FROM information_schema.TABLES 
+        WHERE table_schema = '{conversion.mysql_db_name}' AND table_name = '{original_table_name}';
+    """
+
+    result = DBAccess.query(
+        conversion=conversion,
+        caller=_get_size.__name__,
+        sql=sql,
+        vendor=DBVendor.MYSQL,
+        process_exit_on_error=True,
+        should_return_client=False
+    )
+
+    rows_cnt_result_data = cast(list[dict[str, Any]], result.data)
+    return float(rows_cnt_result_data[0]['size_in_mb'])

@@ -15,7 +15,18 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-from typing import Union
+import os
+import gc
+from typing import Union, Callable, Any
+
+from app.conversion import Conversion
+
+
+def get_cpu_count() -> int:
+    """
+    Returns actual number of physical processes that current machine is able to run in parallel.
+    """
+    return os.cpu_count() or 1
 
 
 def get_index_of(needle: str, haystack: Union[str, list[str], tuple[str]]) -> int:
@@ -29,3 +40,42 @@ def get_index_of(needle: str, haystack: Union[str, list[str], tuple[str]]) -> in
         return haystack.index(needle)
     except:
         return -1
+
+
+def track_memory(func: Callable) -> Callable:
+    """
+    Decorator, intended to track memory used by the program.
+    Notice, memory tracking works only in debug mode.
+    """
+    def wrap(*args: Any, **kwargs: Any) -> Any:
+        conversion = (args[0] if args else None) or kwargs.get('conversion')
+
+        if not isinstance(conversion, Conversion):
+            raise ValueError(f'[{func.__name__}] First track_memory.wrap argument must be of type Conversion')
+
+        if not conversion.debug:
+            func_result = func(*args, **kwargs)
+            gc.collect()
+            return func_result
+
+        import math
+        import psutil
+        from app.fs_ops import log
+
+        def _get_process_memory_stats() -> tuple[int, int]:
+            """
+            Returns current memory stats: rss, vms.
+            """
+            process_memory_stats = psutil.Process().memory_info()
+            return (math.ceil(process_memory_stats.rss / 1024 / 1024),
+                    math.ceil(process_memory_stats.vms / 1024 / 1024))
+
+        rss_before, vms_before = _get_process_memory_stats()
+        log(conversion, f'[{func.__name__}] rss_before {rss_before} MB vms_before {vms_before} MB')
+        func_result = func(*args, **kwargs)
+        unreachable_objects = gc.collect()
+        log(conversion, f'[{func.__name__}] gc.collect() found {unreachable_objects} unreachable objects')
+        rss_after, vms_after = _get_process_memory_stats()
+        log(conversion, f'[{func.__name__}] rss_after {rss_after} MB vms_after {vms_after} MB')
+        return func_result
+    return wrap

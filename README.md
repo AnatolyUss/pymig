@@ -2,6 +2,8 @@ This project is for learning purposes.
 
 <code>$ mypy -p app</code>
 
-1. Fix missing backslash at pd.DataFrame(batch).to_csv() call ("date" table).
-2. Unfortunately, table "test_null_in_text" remains empty...
-3. 
+1. Prepare proper README.
+2. Check all config features, including extra-config, thoroughly.
+3. (NEXT) Add Dockerfile.
+4. (NEXT) Implement running in Cluster mode.
+5. (NEXT) Prepare test coverage.

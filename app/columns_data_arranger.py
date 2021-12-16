@@ -18,12 +18,15 @@ __license__ = """
 from app.utils import get_index_of
 
 
-def arrange_columns_data(table_columns: list[dict], mysql_version: str) -> str:
+def arrange_columns_data(
+    table_columns: list[dict],
+    mysql_version: str,
+    encoding: str,
+) -> str:
     """
-    TODO: must pass encoding.
     Arranges columns data before loading.
     Notice, the "inline" columns encoding conversion cannot be implemented,
-    since MySQL's UTF-8 implementation isn't the same as PostgreSQL's one.
+    since MySQL's utf-8 implementation isn't the same as PostgreSQL's one.
     """
     select_fields_list = []
     wkb_func = 'ST_AsWKB' if float(mysql_version) >= 5.76 else 'AsWKB'
@@ -43,8 +46,10 @@ def arrange_columns_data(table_columns: list[dict], mysql_version: str) -> str:
                                       f" '-INFINITY', CAST(`{col_field}` AS CHAR)) AS `{col_field}`")
         elif is_numeric(col_type):
             select_fields_list.append(f"`{col_field}` AS `{col_field}`")
+        elif encoding in ('utf-8', 'utf8'):
+            select_fields_list.append(f"REPLACE(REPLACE(`{col_field}`, '\0', ''), '\\\\', '\\\\\\\\') AS `{col_field}`")
         else:
-            select_fields_list.append(f"`{col_field}` AS `{col_field}`")
+            select_fields_list.append(f"REPLACE(`{col_field}`, '\\\\', '\\\\\\\\') AS `{col_field}`")
 
     return ','.join(select_fields_list)
 

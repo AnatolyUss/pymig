@@ -21,7 +21,6 @@ import app.extra_config_processor as ExtraConfigProcessor
 import app.db_access as DBAccess
 from app.conversion import Conversion
 from app.fs_ops import log
-from app.concurrency_manager import run_concurrently
 from app.db_vendor import DBVendor
 
 
@@ -69,8 +68,7 @@ def create_indexes(conversion: Conversion, table_name: str) -> None:
         for idx, index_name in enumerate(pg_indexes.keys())
     ]
 
-    run_concurrently(conversion, _set_index, params)
-
+    conversion.run_concurrently(func=_set_index, params_list=params)
     msg = f'[{create_indexes.__name__}] "{conversion.schema}"."{table_name}": PK/indices are successfully set...'
     log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
 

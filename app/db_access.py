@@ -55,13 +55,23 @@ def _get_pooled_db(
     Creates DBUtils.PooledDB instance.
     """
     connection_details = {
+        # Basic connection details.
         'port': db_connection_details['port'],
         'host': db_connection_details['host'],
         'user': db_connection_details['user'],
         'password': db_connection_details['password'],
         'database': db_connection_details['database'],
+
+        # Determines behavior when exceeding the maximum.
+        # If True, blocks and waits until the number of connections decreases, otherwise, by default, raises exception.
         'blocking': True,
+
+        # Maximum number of idle connections in the pool.
+        # Default value of 0 or None means unlimited pool size.
         'maxcached': conversion.max_each_db_connection_pool_size,
+
+        # Maximum number of allowed connections.
+        # Default value of 0 or None means any number of connections.
         'maxconnections': conversion.max_each_db_connection_pool_size,
     }
 
@@ -116,6 +126,7 @@ def get_db_client(
 ) -> PooledDedicatedDBConnection:
     """
     Obtains PooledDedicatedDBConnection instance.
+    Returned PooledDedicatedDBConnection instance is non-shareable, dedicated connection.
     """
     if db_vendor == DBVendor.PG:
         _ensure_pg_connection(conversion)

@@ -23,7 +23,6 @@ from app.conversion import Conversion
 from app.db_vendor import DBVendor
 from app.utils import get_index_of
 from app.fs_ops import log
-from app.concurrency_manager import run_concurrently
 
 
 def process_enum(conversion: Conversion, table_name: str) -> None:
@@ -40,7 +39,7 @@ def process_enum(conversion: Conversion, table_name: str) -> None:
         if _is_enum(column)
     ]
 
-    run_concurrently(conversion, _set_enum, params)
+    conversion.run_concurrently(func=_set_enum, params_list=params)
 
 
 def _is_enum(column: dict) -> bool:

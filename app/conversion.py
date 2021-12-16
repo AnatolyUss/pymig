@@ -16,7 +16,8 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import os
-from typing import Optional
+from typing import cast, Optional, Any, Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from dbutils.pooled_db import PooledDB
 
@@ -52,10 +53,13 @@ class Conversion:
     remove_test_resources: bool
     migrate_only_data: bool
     delimiter: str
+    debug: bool
+    number_of_loader_processes: int
+    _thread_pool_executor: ThreadPoolExecutor
 
     def __init__(self, config: dict):
         """
-        Class constructor.
+        Conversion class constructor.
         """
         self.config = config
         self.source_con_string = self.config['source']
@@ -93,6 +97,64 @@ class Conversion:
 
         self.migrate_only_data = self.config['migrate_only_data'] if 'migrate_only_data' in self.config else False
         self.delimiter = self.config['delimiter'] if 'delimiter' in self.config else ','
+        self.debug = self.config['debug'] if 'debug' in self.config else False
+        self.number_of_loader_processes = self._parse_number_of_loader_processes()
+
+        # Notice, all the threads in this pool will execute io-bound tasks only (sending queries to dbs asynchronously).
+        self._thread_pool_executor = ThreadPoolExecutor(max_workers=self.max_each_db_connection_pool_size)
+
+    def _parse_number_of_loader_processes(self) -> int:
+        """
+        Parses the 'number_of_simultaneously_running_loader_processes' config parameter,
+        and returns its integer representation.
+        """
+        default_number_of_loader_processes = 4
+        number_of_loader_processes = self.config['number_of_simultaneously_running_loader_processes']
+
+        if not number_of_loader_processes:
+            return default_number_of_loader_processes
+
+        if isinstance(number_of_loader_processes, str):
+            return (default_number_of_loader_processes
+                    if number_of_loader_processes == 'DEFAULT'
+                    else int(number_of_loader_processes))
+
+        return cast(int, number_of_loader_processes)
+
+    def shutdown_thread_pool_executor(self) -> None:
+        """
+        Signals the executor that it should free any resources that it is using
+        when all currently pending futures are done executing.
+        """
+        self._thread_pool_executor.shutdown(wait=True, cancel_futures=False)
+
+    def run_concurrently(self, func: Callable, params_list: list[Any]) -> list[Any]:
+        """
+        Runs given function asynchronously with different parameter-sets.
+        """
+        from app.fs_ops import generate_error
+        number_of_tasks = len(params_list)
+
+        if number_of_tasks == 0:
+            return []
+
+        if number_of_tasks == 1:
+            return [func(*params_list[0])]
+
+        parallel_execution_result = []
+        futures = [
+            self._thread_pool_executor.submit(func, *params)
+            for params in params_list
+        ]
+
+        for future in as_completed(futures):
+            try:
+                data = future.result()
+                parallel_execution_result.append(data)
+            except Exception as e:
+                generate_error(self, repr(e))
+
+        return parallel_execution_result
 
     def should_migrate_only_data(self) -> bool:
         """

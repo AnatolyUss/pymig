@@ -20,7 +20,6 @@ from typing import cast, Union
 import app.db_access as DBAccess
 import app.migration_state_manager as MigrationStateManager
 import app.extra_config_processor as ExtraConfigProcessor
-from app.concurrency_manager import run_concurrently
 from app.fs_ops import log
 from app.db_vendor import DBVendor
 from app.conversion import Conversion
@@ -36,7 +35,7 @@ def set_foreign_keys(conversion: Conversion) -> None:
         return
 
     params = [[conversion, table_name] for table_name in conversion.tables_to_migrate]
-    run_concurrently(conversion, _get_foreign_keys_metadata, params)
+    conversion.run_concurrently(func=_get_foreign_keys_metadata, params_list=params)
 
 
 def _get_foreign_keys_metadata(conversion: Conversion, table_name: str) -> None:
@@ -150,7 +149,7 @@ def _set_foreign_keys_for_given_table(
         constraints[row['CONSTRAINT_NAME']]['delete_rule'] = row['DELETE_RULE']
 
     params = [[conversion, constraints, foreign_key, table_name] for foreign_key in constraints.keys()]
-    run_concurrently(conversion, _set_single_foreign_key, params)
+    conversion.run_concurrently(func=_set_single_foreign_key, params_list=params)
 
 
 def _set_single_foreign_key(

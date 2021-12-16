@@ -19,7 +19,6 @@ import app.db_access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
 from app.table_processor import map_data_types
 from app.conversion import Conversion
-from app.concurrency_manager import run_concurrently
 from app.utils import get_index_of
 from app.db_vendor import DBVendor
 from app.fs_ops import log
@@ -55,7 +54,7 @@ def process_default(conversion: Conversion, table_name: str) -> None:
         for column in conversion.dic_tables[table_name].table_columns
     ]
 
-    run_concurrently(conversion, _set_default, params)
+    conversion.run_concurrently(func=_set_default, params_list=params)
 
 
 def _set_default(

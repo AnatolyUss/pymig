@@ -28,6 +28,7 @@ def generate_report(conversion: Conversion, last_message: str) -> None:
     Generates a summary report.
     """
     log_title = generate_report.__name__
+    conversion.shutdown_thread_pool_executor()
     difference_sec = (time.time() - cast(float, conversion.time_begin))
     seconds = math.floor(difference_sec % 60)
     difference_sec /= 60

@@ -17,7 +17,6 @@ __license__ = """
 """
 import app.db_access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
-from app.concurrency_manager import run_concurrently
 from app.db_vendor import DBVendor
 from app.conversion import Conversion
 from app.fs_ops import log
@@ -37,7 +36,7 @@ def process_null(conversion: Conversion, table_name: str) -> None:
         if column['Null'].lower() == 'no'
     ]
 
-    run_concurrently(conversion, _set_not_null, params)
+    conversion.run_concurrently(func=_set_not_null, params_list=params)
 
 
 def _set_not_null(

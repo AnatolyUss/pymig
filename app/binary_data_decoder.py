@@ -21,7 +21,6 @@ import app.db_access as DBAccess
 from app.db_vendor import DBVendor
 from app.fs_ops import log
 from app.conversion import Conversion
-from app.concurrency_manager import run_concurrently
 
 
 def decode(conversion: Conversion) -> None:
@@ -48,7 +47,7 @@ def decode(conversion: Conversion) -> None:
 
     result_data = cast(list[dict[str, Any]], result.data)
     params = [[conversion, record['table_name'], record['column_name']] for record in result_data]
-    run_concurrently(conversion, _decode, params)
+    conversion.run_concurrently(func=_decode, params_list=params)
 
 
 def _decode(
