@@ -40,11 +40,30 @@
     ],
     "max_each_db_connection_pool_size" : 20,
 
+    "number_of_simultaneously_running_loader_processes_description": [
+        "Number of data-loader processes that will run simultaneously.",
+        "Acceptable values:",
+        "1. 'DEFAULT' - when set to 'DEFAULT', FromMySqlToPostgreSql will run 4 data-loader processes.",
+        "2. Any positive integer, representing a number of data-loader processes.",
+        "Notice:",
+        "1.",
+        "Usually, migration gets accomplished faster with only 4 data-loader processes,",
+        "even if more CPU cores are available.",
+        "Yet, it is worth an effort to 'play' with this parameter prior running migration in production,",
+        "to check how many loader processes work best in your case.",
+        "When trying FromMySqlToPostgreSql on your test-database, try both decreasing and increasing this number.",
+        "2.",
+        "'number_of_simultaneously_running_loader_processes' will never be greater",
+        "than a number of logical CPU cores of the machine running FromMySqlToPostgreSql.",
+        "If greater number chosen - FromMySqlToPostgreSql will run one loader process per each available CPU core."
+    ],
+    "number_of_simultaneously_running_loader_processes": "DEFAULT",
+
     "encoding_description" : [
         "Python encoding type.",
-        "If not supplied, then utf_8 will be used as a default."
+        "If not supplied, then utf-8 will be used as a default."
     ],
-    "encoding" : "utf_8",
+    "encoding" : "utf-8",
 
     "schema_description" : [
         "A name of the schema, that will contain all migrated tables.",
@@ -74,5 +93,11 @@
         "In order to enable the additional configuration options, placed at extra_config.json",
         " - set this parameter true."
     ],
-    "enable_extra_config" : false
+    "enable_extra_config" : false,
+
+    "debug_description": [
+        "If true, run the program in debug mode.",
+        "Otherwise, run the program in production mode."
+    ],
+    "debug": false
 }
