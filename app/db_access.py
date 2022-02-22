@@ -18,11 +18,13 @@ __license__ = """
 import sys
 from typing import Optional, Union
 
-import pymysql
-from pymysql.connections import Connection as PymysqlConnection
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from dbutils.pooled_db import PooledDB, PooledDedicatedDBConnection
+from MySQLdb import (
+    Connection as MySQLdbConnection,
+    cursors as MySQLdbCursors,
+)
 
 from app.db_access_query_result import DBAccessQueryResult
 from app.fs_ops import generate_error
@@ -77,8 +79,8 @@ def _get_pooled_db(
 
     if db_vendor == DBVendor.MYSQL:
         connection_details.update({
-            'creator': pymysql,
-            'cursorclass': pymysql.cursors.DictCursor,
+            'creator': MySQLdbConnection,
+            'cursorclass': MySQLdbCursors.DictCursor,
             'charset': db_connection_details['charset'],
         })
     elif db_vendor == DBVendor.PG:
@@ -105,18 +107,18 @@ def close_connection_pools(conversion: Conversion) -> None:
                 generate_error(conversion, f'[{close_connection_pools.__name__}] {repr(e)}')
 
 
-def get_mysql_unbuffered_client(conversion: Conversion) -> PymysqlConnection:
+def get_mysql_unbuffered_client(conversion: Conversion) -> MySQLdbConnection:
     """
     Returns MySQL unbuffered client.
     """
-    return pymysql.connect(
+    return MySQLdbConnection(
         port=conversion.source_con_string['port'],
         host=conversion.source_con_string['host'],
         user=conversion.source_con_string['user'],
         password=conversion.source_con_string['password'],
         charset=conversion.source_con_string['charset'],
-        db=conversion.source_con_string['database'],
-        cursorclass=pymysql.cursors.SSCursor
+        database=conversion.source_con_string['database'],
+        cursorclass=MySQLdbCursors.SSCursor,
     )
 
 

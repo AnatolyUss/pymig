@@ -25,6 +25,8 @@ class DBAccessQueryResult:
     data: Optional[list[dict[str, Any]]]
     error: Optional[Exception]
 
+    __slots__ = ('client', 'data', 'error')
+
     def __init__(
         self,
         client: Optional[PooledDedicatedDBConnection],

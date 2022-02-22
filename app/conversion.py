@@ -57,6 +57,15 @@ class Conversion:
     number_of_loader_processes: int
     _thread_pool_executor: ThreadPoolExecutor
 
+    __slots__ = (
+        'config', 'source_con_string', 'target_con_string', 'mysql', 'pg', 'logs_dir_path', 'data_types_map',
+        'data_types_map_addr', 'all_logs_path', 'error_logs_path', 'not_created_views_path', 'exclude_tables',
+        'include_tables', 'encoding', 'time_begin', 'mysql_version', 'extra_config', 'tables_to_migrate',
+        'views_to_migrate', 'data_pool', 'dic_tables', 'mysql_db_name', 'schema', 'max_each_db_connection_pool_size',
+        'runs_in_test_mode', 'remove_test_resources', 'migrate_only_data', 'delimiter', 'debug',
+        'number_of_loader_processes', '_thread_pool_executor',
+    )
+
     def __init__(self, config: dict):
         """
         Conversion class constructor.

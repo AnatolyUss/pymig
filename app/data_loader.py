@@ -131,22 +131,23 @@ def populate_table_worker(
         # This data is buffered in executor's "Call Queue" - hence memory consumption gets higher without
         # significant performance increase.
         with ProcessPoolExecutor(max_workers=1) as executor:
-            batch_size = 10000
+            batch_size = 30000
             buffered_batches = 0
-            max_buffered_batches = 5
+            max_buffered_batches = 3
 
             while True:
                 # Notice:
                 # 1. Additional memory allocation happens below.
                 # 2. This "while True" loop DOES NOT aggregate memory, so memory consumption level remains steady.
                 # 3. The data retrieved by "mysql_cursor.fetchmany" is eventually copied to the write-worker.
-                # 4. Batch size of 10000 rows seems reasonable for maximal speed without memory spikes.
+                # 4. Batch size of 30000 rows seems reasonable for maximal speed without memory spikes.
                 # 5. !!!Significant increase of batch size DOES NOT lead to noticeable performance improvement.
                 batch = mysql_cursor.fetchmany(batch_size)
                 buffered_batches += 1
                 rows_to_insert = len(batch)
 
                 if rows_to_insert == 0:
+                    # No more records to insert.
                     break
 
                 # Notice, the "inline" columns encoding conversion cannot be implemented,
