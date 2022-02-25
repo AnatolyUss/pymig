@@ -19,7 +19,6 @@ import app.db_access as DBAccess
 import app.extra_config_processor as ExtraConfigProcessor
 from app.table_processor import map_data_types
 from app.conversion import Conversion
-from app.utils import get_index_of
 from app.db_vendor import DBVendor
 from app.fs_ops import log
 
@@ -32,7 +31,14 @@ def process_default(conversion: Conversion, table_name: str) -> None:
     msg = f'[{process_default.__name__}] Determines default values for table: "{conversion.schema}"."{table_name}"'
     log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
     original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, should_get_original=True)
-    pg_numeric_types = ('money', 'numeric', 'decimal', 'double precision', 'real', 'bigint', 'int', 'smallint')
+
+    pg_bit_types = ('bit', 'bit varying')
+    pg_binary_types = ('bytea',)
+    pg_numeric_types = (
+        'smallint', 'integer', 'bigint', 'decimal', 'numeric', 'int',
+        'real', 'double precision', 'smallserial', 'serial', 'bigserial',
+    )
+
     sql_reserved_values = {
         'CURRENT_DATE': 'CURRENT_DATE',
         '0000-00-00': "'-INFINITY'",
@@ -50,7 +56,10 @@ def process_default(conversion: Conversion, table_name: str) -> None:
     }
 
     params = [
-        [conversion, table_name, original_table_name, column, sql_reserved_values, pg_numeric_types]
+        [
+            conversion, table_name, original_table_name, column, sql_reserved_values,
+            pg_numeric_types, pg_bit_types, pg_binary_types,
+        ]
         for column in conversion.dic_tables[table_name].table_columns
     ]
 
@@ -63,7 +72,9 @@ def _set_default(
     original_table_name: str,
     column: dict,
     sql_reserved_values: dict[str, str],
-    pg_numeric_types: tuple[str]
+    pg_numeric_types: tuple[str],
+    pg_bit_types: tuple[str],
+    pg_binary_types: tuple[str],
 ) -> None:
     """
     Sets default value for given column.
@@ -77,13 +88,20 @@ def _set_default(
     )
 
     sql = f'ALTER TABLE "{conversion.schema}"."{table_name}" ALTER COLUMN "{column_name}" SET DEFAULT'
+    is_of_bit_type = _is_of_type(pg_data_type=pg_data_type, pg_types=pg_bit_types)
+    is_of_binary_type = _is_of_type(pg_data_type=pg_data_type, pg_types=pg_binary_types)
+    is_of_numeric_type = _is_of_type(pg_data_type=pg_data_type, pg_types=pg_numeric_types)
 
     if column['Default'] in sql_reserved_values:
         sql += f" {sql_reserved_values[column['Default']]};"
-    elif get_index_of(pg_data_type, pg_numeric_types) == -1 and column['Default'] is not None:
-        sql += f" '{column['Default']}';"
     elif column['Default'] is None:
         sql += ' NULL;'
+    elif is_of_bit_type and column['Default'] is not None:
+        sql += f" {column['Default']};"  # bit varying
+    elif is_of_binary_type and column['Default'] is not None:
+        sql += f" '\\x{column['Default']}';"  # bytea
+    elif is_of_numeric_type and column['Default'] is not None:
+        sql += f" '{column['Default']}';"
     else:
         sql += f" {column['Default']};"
 
@@ -101,3 +119,10 @@ def _set_default(
                f' "{conversion.schema}"."{table_name}"."{column_name}"...')
 
         log(conversion, msg, conversion.dic_tables[table_name].table_log_path)
+
+
+def _is_of_type(pg_data_type: str, pg_types: tuple[str]) -> bool:
+    """
+    Defines if given pg_data_type is related to one of types from pg_types tuple.
+    """
+    return len([pg_type for pg_type in pg_types if pg_data_type.startswith(pg_type)]) != 0
