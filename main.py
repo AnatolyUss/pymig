@@ -18,7 +18,7 @@ __license__ = """
 import os
 
 import app.db_access as DBAccess
-from app.fs_ops import read_config, read_extra_config, create_logs_directory, read_data_types_map
+from app.fs_ops import read_config, read_extra_config, create_logs_directory, read_data_types_map, read_index_types_map
 from app.boot_processor import boot, get_introduction_message
 from app.schema_processor import create_schema
 from app.conversion import Conversion
@@ -39,6 +39,7 @@ if __name__ == '__main__':
     create_logs_directory(conversion)
     boot(conversion)
     read_data_types_map(conversion)
+    read_index_types_map(conversion)
     create_schema(conversion)
     create_state_logs_table(conversion)
     create_data_pool_table(conversion)

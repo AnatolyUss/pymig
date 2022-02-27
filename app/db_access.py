@@ -201,6 +201,9 @@ def query(
 
         client.commit()
         data = cursor.fetchall()
+
+        if isinstance(data, tuple):
+            data = list(data)
     except psycopg2.ProgrammingError as programming_error:
         if should_return_programming_error:
             error = programming_error

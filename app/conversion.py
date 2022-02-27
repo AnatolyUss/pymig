@@ -55,6 +55,8 @@ class Conversion:
     delimiter: str
     debug: bool
     number_of_loader_processes: int
+    index_types_map: dict[str, str]
+    index_types_map_addr: str
     _thread_pool_executor: ThreadPoolExecutor
 
     __slots__ = (
@@ -63,7 +65,7 @@ class Conversion:
         'include_tables', 'encoding', 'time_begin', 'mysql_version', 'extra_config', 'tables_to_migrate',
         'views_to_migrate', 'data_pool', 'dic_tables', 'mysql_db_name', 'schema', 'max_each_db_connection_pool_size',
         'runs_in_test_mode', 'remove_test_resources', 'migrate_only_data', 'delimiter', 'debug',
-        'number_of_loader_processes', '_thread_pool_executor',
+        'number_of_loader_processes', '_thread_pool_executor', 'index_types_map', 'index_types_map_addr',
     )
 
     def __init__(self, config: dict):
@@ -76,6 +78,8 @@ class Conversion:
         self.mysql = None
         self.pg = None
         self.logs_dir_path = self.config['logs_dir_path']
+        self.index_types_map = {}
+        self.index_types_map_addr = self.config['index_types_map_addr']
         self.data_types_map = {}
         self.data_types_map_addr = self.config['data_types_map_addr']
         self.all_logs_path = os.path.join(self.logs_dir_path, 'all.log')

@@ -90,6 +90,7 @@ def read_config(base_dir: str, config_file_name: str = 'config.json') -> dict:
         config = json.loads(config_str)
         config['logs_dir_path'] = os.path.join(base_dir, 'logs_directory')
         config['data_types_map_addr'] = os.path.join(base_dir, 'config', 'data_types_map.json')
+        config['index_types_map_addr'] = os.path.join(base_dir, 'config', 'index_types_map.json')
         return cast(dict, config)
 
 
@@ -112,8 +113,17 @@ def read_extra_config(config: dict, base_dir: str) -> dict:
 
 def read_data_types_map(conversion: Conversion) -> None:
     """
-    Reads "./config/data_types_map.json" and converts its json content to js object.
+    Reads "./config/data_types_map.json" and converts its json content to Python dict.
     """
     with open(conversion.data_types_map_addr, 'r') as file:
         contents = file.read()
         conversion.data_types_map = json.loads(contents)
+
+
+def read_index_types_map(conversion: Conversion) -> None:
+    """
+    Reads "./config/index_types_map.json" and converts its json content to Python dict.
+    """
+    with open(conversion.index_types_map_addr, 'r') as file:
+        contents = file.read()
+        conversion.index_types_map = json.loads(contents)
