@@ -43,7 +43,7 @@ def prepare_data_chunks(
     select_field_list = arrange_columns_data(
         table_columns=conversion.dic_tables[table_name].table_columns,
         mysql_version=conversion.mysql_version,
-        encoding=conversion.encoding,
+        mysql_charset=conversion.source_con_string['charset'],
     )
 
     table_data_size = _get_size(conversion=conversion, original_table_name=original_table_name)

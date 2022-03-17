@@ -19,7 +19,6 @@ import io
 from typing import Optional, Any, cast
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-import pandas as pd
 from dbutils.pooled_db import PooledDedicatedDBConnection
 
 import app.db_access as DBAccess
@@ -150,16 +149,7 @@ def populate_table_worker(
                     # No more records to insert.
                     break
 
-                # Notice, the "inline" columns encoding conversion cannot be implemented,
-                # since MySQL's UTF-8 implementation isn't the same as PostgreSQL's one.
-                rows = pd.DataFrame(batch).to_csv(
-                    index=False,
-                    header=False,
-                    encoding=conversion.encoding,
-                    na_rep='\\N',
-                    sep='\t',
-                )
-
+                rows = '\n'.join(['\t'.join(record) for record in batch])
                 text_stream = io.StringIO()
                 text_stream.write(rows)
                 text_stream.seek(0)
@@ -229,7 +219,7 @@ def _arrange_and_load_batch(
             original_session_replication_role = disable_triggers(conversion, pg_client)
 
         sql_copy = (f'COPY "{conversion.schema}"."{table_name}" FROM STDIN'
-                    f' WITH(FORMAT text, DELIMITER \'\t\', ENCODING \'{conversion.encoding}\');')
+                    f' WITH(FORMAT text, DELIMITER \'\t\', ENCODING \'{conversion.target_con_string["charset"]}\');')
 
         pg_cursor.copy_expert(sql=sql_copy, file=text_stream)
         pg_client.commit()

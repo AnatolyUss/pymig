@@ -38,7 +38,6 @@ class Conversion:
     not_created_views_path: str
     exclude_tables: list[str]
     include_tables: list[str]
-    encoding: str
     time_begin: Optional[float]
     mysql_version: str
     extra_config: dict
@@ -62,7 +61,7 @@ class Conversion:
     __slots__ = (
         'config', 'source_con_string', 'target_con_string', 'mysql', 'pg', 'logs_dir_path', 'data_types_map',
         'data_types_map_addr', 'all_logs_path', 'error_logs_path', 'not_created_views_path', 'exclude_tables',
-        'include_tables', 'encoding', 'time_begin', 'mysql_version', 'extra_config', 'tables_to_migrate',
+        'include_tables', 'time_begin', 'mysql_version', 'extra_config', 'tables_to_migrate',
         'views_to_migrate', 'data_pool', 'dic_tables', 'mysql_db_name', 'schema', 'max_each_db_connection_pool_size',
         'runs_in_test_mode', 'remove_test_resources', 'migrate_only_data', 'delimiter', 'debug',
         'number_of_loader_processes', '_thread_pool_executor', 'index_types_map', 'index_types_map_addr',
@@ -87,7 +86,6 @@ class Conversion:
         self.not_created_views_path = os.path.join(self.logs_dir_path, 'not_created_views')
         self.exclude_tables = self.config['exclude_tables'] if 'exclude_tables' in self.config else []
         self.include_tables = self.config['include_tables'] if 'include_tables' in self.config else []
-        self.encoding = self.config['encoding'] if 'encoding' in self.config else 'utf-8'
         self.time_begin = None
         self.mysql_version = '5.6.21'
         self.extra_config = self.config['extra_config'] if 'extra_config' in self.config else {}
