@@ -49,4 +49,5 @@ if __name__ == '__main__':
     decode(conversion)
     process_constraints(conversion)
     DBAccess.close_connection_pools(conversion)
+    conversion.shutdown_thread_pool_executor()
     generate_report(conversion, 'Migration is accomplished.')
