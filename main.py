@@ -16,6 +16,12 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import os
+import sys
+
+
+cwd = os.getcwd()
+sys.path.append(cwd)
+
 
 import app.db_access as DBAccess
 from app.fs_ops import read_config, read_extra_config, create_logs_directory, read_data_types_map, read_index_types_map
@@ -32,7 +38,7 @@ from app.data_loader import send_data
 
 if __name__ == '__main__':
     print(get_introduction_message())
-    base_dir = os.getenv('aux_dir', os.getcwd())
+    base_dir = os.getenv('aux_dir', cwd)
     config = read_config(base_dir)
     config = read_extra_config(config, base_dir)
     conversion = Conversion(config)
