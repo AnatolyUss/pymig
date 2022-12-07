@@ -21,7 +21,7 @@ from app.utils import get_index_of
 def arrange_columns_data(
     table_columns: list[dict],
     mysql_version: str,
-    encoding: str,
+    mysql_charset: str,
 ) -> str:
     """
     Arranges columns data before loading.
@@ -36,20 +36,21 @@ def arrange_columns_data(
 
         if is_spacial(col_type):
             # Apply HEX(ST_AsWKB(...)) due to the issue, described at https://bugs.mysql.com/bug.php?id=69798
-            select_fields_list.append(f'HEX({wkb_func}(`{col_field}`)) AS `{col_field}`')
+            select_fields_list.append(f'IFNULL(CONCAT(\'\\x\', HEX({wkb_func}(`{col_field}`))), \'\\\\N\') AS `{col_field}`')
         elif is_binary(col_type):
-            select_fields_list.append(f'HEX(`{col_field}`) AS `{col_field}`')
+            select_fields_list.append(f'IFNULL(CONCAT(\'\\x\', HEX(`{col_field}`)), \'\\\\N\') AS `{col_field}`')
         elif is_bit(col_type):
-            select_fields_list.append('BIN(`{0}`) AS `{0}`'.format(col_field))
+            select_fields_list.append('IFNULL(BIN(`{0}`), \'\\\\N\') AS `{0}`'.format(col_field))
         elif is_date_time(col_type):
             select_fields_list.append(f"IF(`{col_field}` IN('0000-00-00', '0000-00-00 00:00:00'),"
-                                      f" '-INFINITY', CAST(`{col_field}` AS CHAR)) AS `{col_field}`")
+                                      f" '-INFINITY', IFNULL(CAST(`{col_field}` AS CHAR), '\\\\N')) AS `{col_field}`")
         elif is_numeric(col_type):
-            select_fields_list.append(f"`{col_field}` AS `{col_field}`")
-        elif encoding in ('utf-8', 'utf8'):
-            select_fields_list.append(f"REPLACE(REPLACE(`{col_field}`, '\0', ''), '\\\\', '\\\\\\\\') AS `{col_field}`")
+            select_fields_list.append(f"IFNULL(CAST(`{col_field}` AS CHAR), '\\\\N') AS `{col_field}`")
+        elif mysql_charset in ('utf-8', 'utf8', 'utf8mb3', 'utf8mb4'):
+            select_fields_list.append(f"IFNULL(REPLACE(REPLACE(`{col_field}`, '\0', ''), '\\\\', '\\\\\\\\'),"
+                                      f" '\\\\N') AS `{col_field}`")
         else:
-            select_fields_list.append(f"REPLACE(`{col_field}`, '\\\\', '\\\\\\\\') AS `{col_field}`")
+            select_fields_list.append(f"IFNULL(REPLACE(`{col_field}`, '\\\\', '\\\\\\\\'), '\\\\N') AS `{col_field}`")
 
     return ','.join(select_fields_list)
 

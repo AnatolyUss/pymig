@@ -51,6 +51,14 @@ def write_to_file(path: str, mode: str, message: str) -> None:
         file.write(message)
 
 
+def _file_read(address: str) -> str:
+    """
+    Returns content of the file under given address.
+    """
+    with open(address, 'r') as file:
+        return file.read()
+
+
 def _get_logs_prefix() -> str:
     """
     Returns logs prefix.
@@ -85,12 +93,13 @@ def read_config(base_dir: str, config_file_name: str = 'config.json') -> dict:
     """
     Reads the main configuration file and returns its contents as a dictionary.
     """
-    with open(os.path.join(base_dir, 'config', config_file_name), 'r') as file:
-        config_str = file.read()
-        config = json.loads(config_str)
-        config['logs_dir_path'] = os.path.join(base_dir, 'logs_directory')
-        config['data_types_map_addr'] = os.path.join(base_dir, 'config', 'data_types_map.json')
-        return cast(dict, config)
+    path_to_main_config = os.path.join(base_dir, 'config', config_file_name)
+    config_str = _file_read(path_to_main_config)
+    config = json.loads(config_str)
+    config['logs_dir_path'] = os.path.join(base_dir, 'logs_directory')
+    config['data_types_map_addr'] = os.path.join(base_dir, 'config', 'data_types_map.json')
+    config['index_types_map_addr'] = os.path.join(base_dir, 'config', 'index_types_map.json')
+    return cast(dict, config)
 
 
 def read_extra_config(config: dict, base_dir: str) -> dict:
@@ -102,18 +111,22 @@ def read_extra_config(config: dict, base_dir: str) -> dict:
         return config
 
     path_to_extra_config = os.path.join(base_dir, 'config', 'extra_config.json')
-
-    with open(path_to_extra_config, 'r') as file:
-        extra_config_str = file.read()
-        config['extra_config'] = json.loads(extra_config_str)
-
+    extra_config_str = _file_read(path_to_extra_config)
+    config['extra_config'] = json.loads(extra_config_str)
     return config
 
 
 def read_data_types_map(conversion: Conversion) -> None:
     """
-    Reads "./config/data_types_map.json" and converts its json content to js object.
+    Reads "./config/data_types_map.json" and converts its json content to Python dict.
     """
-    with open(conversion.data_types_map_addr, 'r') as file:
-        contents = file.read()
-        conversion.data_types_map = json.loads(contents)
+    contents = _file_read(conversion.data_types_map_addr)
+    conversion.data_types_map = json.loads(contents)
+
+
+def read_index_types_map(conversion: Conversion) -> None:
+    """
+    Reads "./config/index_types_map.json" and converts its json content to Python dict.
+    """
+    contents = _file_read(conversion.index_types_map_addr)
+    conversion.index_types_map = json.loads(contents)

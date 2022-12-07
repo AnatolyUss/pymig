@@ -56,11 +56,10 @@ def create_indexes(conversion: Conversion, table_name: str) -> None:
             cast(list[str], pg_indexes[index['Key_name']]['column_name']).append(f'"{pg_column_name}"')
             continue
 
-        pg_index_type = 'GIST' if index['Index_type'] == 'SPATIAL' else index['Index_type']
         pg_indexes[index['Key_name']] = {
             'is_unique': index['Non_unique'] == 0,
             'column_name': [f'"{pg_column_name}"'],
-            'index_type': f' USING {pg_index_type}',
+            'index_type': f' USING {_get_index_type(conversion=conversion, index_type=index["Index_type"])}',
         }
 
     params = [
@@ -108,3 +107,10 @@ def _set_index(
         process_exit_on_error=False,
         should_return_client=False
     )
+
+
+def _get_index_type(conversion: Conversion, index_type: str) -> str:
+    """
+    Returns PostgreSQL index type, that correlates to given MySQL index type.
+    """
+    return conversion.index_types_map[index_type] if index_type in conversion.index_types_map else 'BTREE'

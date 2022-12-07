@@ -59,12 +59,6 @@
     ],
     "number_of_simultaneously_running_loader_processes": "DEFAULT",
 
-    "encoding_description" : [
-        "Python encoding type.",
-        "If not supplied, then utf-8 will be used as a default."
-    ],
-    "encoding" : "utf-8",
-
     "schema_description" : [
         "A name of the schema, that will contain all migrated tables.",
         "If not supplied, then a new schema will be created automatically."

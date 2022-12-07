@@ -16,9 +16,15 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import os
+import sys
+
+
+cwd = os.getcwd()
+sys.path.append(cwd)
+
 
 import app.db_access as DBAccess
-from app.fs_ops import read_config, read_extra_config, create_logs_directory, read_data_types_map
+from app.fs_ops import read_config, read_extra_config, create_logs_directory, read_data_types_map, read_index_types_map
 from app.boot_processor import boot, get_introduction_message
 from app.schema_processor import create_schema
 from app.conversion import Conversion
@@ -32,13 +38,14 @@ from app.data_loader import send_data
 
 if __name__ == '__main__':
     print(get_introduction_message())
-    base_dir = os.getenv('aux_dir', os.getcwd())
+    base_dir = os.getenv('aux_dir', cwd)
     config = read_config(base_dir)
     config = read_extra_config(config, base_dir)
     conversion = Conversion(config)
     create_logs_directory(conversion)
     boot(conversion)
     read_data_types_map(conversion)
+    read_index_types_map(conversion)
     create_schema(conversion)
     create_state_logs_table(conversion)
     create_data_pool_table(conversion)
@@ -48,4 +55,5 @@ if __name__ == '__main__':
     decode(conversion)
     process_constraints(conversion)
     DBAccess.close_connection_pools(conversion)
+    conversion.shutdown_thread_pool_executor()
     generate_report(conversion, 'Migration is accomplished.')

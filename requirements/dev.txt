@@ -2,8 +2,7 @@
 
 mypy==0.920
 mypy-extensions==0.4.3
-typing-extensions==4.0.1
-types-PyMySQL==1.0.6
-types-psycopg2==2.9.4
 psutil==5.8.0
 types-psutil==5.8.15
+types-psycopg2==2.9.4
+typing-extensions==4.0.1

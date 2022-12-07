@@ -22,6 +22,8 @@ class Table:
     table_log_path: str
     table_columns: list[dict[str, Any]]
 
+    __slots__ = ('table_log_path', 'table_columns')
+
     def __init__(self, table_log_path: str):
         """
         Class constructor.
