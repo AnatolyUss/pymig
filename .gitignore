@@ -3,3 +3,4 @@ logs_directory
 __pycache__
 Pipefile
 Pipefile.lock
+misc.txt

@@ -149,7 +149,10 @@ def populate_table_worker(
                     # No more records to insert.
                     break
 
+                # Note, the list comprehension below wrapped in square brackets on purpose.
+                # DO NOT strip the brackets, since it will work slower.
                 rows = '\n'.join(['\t'.join(record) for record in batch])
+
                 text_stream = io.StringIO()
                 text_stream.write(rows)
                 text_stream.seek(0)
