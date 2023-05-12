@@ -15,7 +15,7 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-from app.utils import get_index_of
+from pymig.utils import get_index_of
 
 
 def arrange_columns_data(
@@ -47,44 +47,11 @@ def arrange_columns_data(
                                       f" '-INFINITY', IFNULL(CAST(`{col_field}` AS CHAR), '\\\\N')) AS `{col_field}`")
         elif is_numeric(col_type):
             select_fields_list.append(f"IFNULL(CAST(`{col_field}` AS CHAR), '\\\\N') AS `{col_field}`")
-        # TODO: check; the original version is the one commented below.
-        # #########################################################################
-        # elif mysql_charset in ('utf-8', 'utf8', 'utf8mb3', 'utf8mb4'):
-        #     select_fields_list.append(f"IFNULL(REPLACE(REPLACE(`{col_field}`, '\0', ''), '\\\\', '\\\\\\\\'),"
-        #                               f" '\\\\N') AS `{col_field}`")
-        # else:
-        #     select_fields_list.append(f"IFNULL(REPLACE(`{col_field}`, '\\\\', '\\\\\\\\'), '\\\\N') AS `{col_field}`")
-        # #########################################################################
-        # elif mysql_charset in ('utf-8', 'utf8', 'utf8mb3', 'utf8mb4'):
-        #     select_fields_list.append(f"IFNULL(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE("
-        #                               f"REPLACE(`{col_field}`, '\0', ''), '\\\\', '\\\\\\\\'), '\\b', '\\\\b'),"
-        #                               f" '\\n', '\\\\n'), '\\t', '\\\\t'),"
-        #                               f" '\\f', '\\\\f'), '\\r', '\\\\r'), '\\v', '\\\\v'), '\\\\N') AS `{col_field}`")
-        # else:
-        #     select_fields_list.append(f"IFNULL(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(`{col_field}`,"
-        #                               f" '\\\\', '\\\\\\\\'), '\\b', '\\\\b'), '\\n', '\\\\n'), '\\t', '\\\\t'),"
-        #                               f" '\\f', '\\\\f'), '\\r', '\\\\r'), '\\v', '\\\\v'), '\\\\N') AS `{col_field}`")
-        # #########################################################################
-        # elif mysql_charset in ('utf-8', 'utf8', 'utf8mb3', 'utf8mb4'):
-        #     select_fields_list.append(f"IFNULL(REPLACE(REPLACE(REPLACE(REPLACE("
-        #                               f"REPLACE(`{col_field}`, '\0', ''), '\\\\', '\\\\\\\\'),"
-        #                               f" '\\n', '\\\\n'), '\\t', '\\\\t'),"
-        #                               f" '\\r', '\\\\r'), '\\\\N') AS `{col_field}`")
-        # else:
-        #     select_fields_list.append(f"IFNULL(REPLACE(REPLACE(REPLACE(REPLACE(`{col_field}`,"
-        #                               f" '\\\\', '\\\\\\\\'), '\\n', '\\\\n'), '\\t', '\\\\t'),"
-        #                               f" '\\r', '\\\\r'), '\\\\N') AS `{col_field}`")
-        # #########################################################################
-        elif mysql_charset in ('utf-8', 'utf8', 'utf8mb3', 'utf8mb4'):
-            select_fields_list.append(f"IFNULL(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE("
-                                      f"REPLACE(`{col_field}`, '\0', ''), '\\\\', '\\\\\\\\'), '\\b', '\\\\b'),"
-                                      f" '\\n', '\\\\n'), '\\t', '\\\\t'), '\\f', '\\\\f'), '\\r', '\\\\r'),"
-                                      f" '\\v', '\\\\v'), '\\\\N') AS `{col_field}`")
+        elif mysql_charset.lower() in ('utf-8', 'utf8', 'utf8mb3', 'utf8mb4'):
+            select_fields_list.append(f"IFNULL(REPLACE(REPLACE(`{col_field}`, '\0', ''), '\\\\', '\\\\\\\\'),"
+                                      f" '\\\\N') AS `{col_field}`")
         else:
-            select_fields_list.append(f"IFNULL(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(`{col_field}`,"
-                                      f" '\\\\', '\\\\\\\\'), '\\n', '\\\\n'), '\\t', '\\\\t'), '\\f', '\\\\f'),"
-                                      f" '\\r', '\\\\r'), '\\v', '\\\\v'), '\\b', '\\\\b'), '\\\\N')"
-                                      f" AS `{col_field}`")
+            select_fields_list.append(f"IFNULL(REPLACE(`{col_field}`, '\\\\', '\\\\\\\\'), '\\\\N') AS `{col_field}`")
 
     return ','.join(select_fields_list)
 

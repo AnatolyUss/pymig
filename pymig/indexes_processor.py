@@ -17,11 +17,11 @@ __license__ = """
 """
 from typing import Union, cast, Any
 
-import app.extra_config_processor as ExtraConfigProcessor
-import app.db_access as DBAccess
-from app.conversion import Conversion
-from app.fs_ops import log
-from app.db_vendor import DBVendor
+import pymig.extra_config_processor as ExtraConfigProcessor
+import pymig.db_access as DBAccess
+from pymig.conversion import Conversion
+from pymig.fs_ops import log
+from pymig.db_vendor import DBVendor
 
 
 def create_indexes(conversion: Conversion, table_name: str) -> None:

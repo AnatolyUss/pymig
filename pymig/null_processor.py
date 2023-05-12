@@ -15,11 +15,11 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-import app.db_access as DBAccess
-import app.extra_config_processor as ExtraConfigProcessor
-from app.db_vendor import DBVendor
-from app.conversion import Conversion
-from app.fs_ops import log
+import pymig.db_access as DBAccess
+import pymig.extra_config_processor as ExtraConfigProcessor
+from pymig.db_vendor import DBVendor
+from pymig.conversion import Conversion
+from pymig.fs_ops import log
 
 
 def process_null(conversion: Conversion, table_name: str) -> None:

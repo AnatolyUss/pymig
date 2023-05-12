@@ -18,12 +18,12 @@ __license__ = """
 import os
 from typing import cast, Any
 
-import app.migration_state_manager as MigrationStateManager
-import app.db_access as DBAccess
-from app.db_vendor import DBVendor
-from app.utils import get_index_of
-from app.fs_ops import write_to_file, log
-from app.conversion import Conversion
+import pymig.migration_state_manager as MigrationStateManager
+import pymig.db_access as DBAccess
+from pymig.db_vendor import DBVendor
+from pymig.utils import get_index_of
+from pymig.fs_ops import write_to_file, log
+from pymig.conversion import Conversion
 
 
 def generate_views(conversion: Conversion) -> None:

@@ -17,16 +17,16 @@ __license__ = """
 """
 from typing import cast, Any
 
-import app.db_access as DBAccess
-import app.migration_state_manager as MigrationStateManager
-import app.extra_config_processor as ExtraConfigProcessor
-from app.db_vendor import DBVendor
-from app.utils import get_index_of
-from app.table import Table
-from app.fs_ops import log
-from app.conversion import Conversion
-from app.table_processor import create_table
-from app.data_chunks_processor import prepare_data_chunks
+import pymig.db_access as DBAccess
+import pymig.migration_state_manager as MigrationStateManager
+import pymig.extra_config_processor as ExtraConfigProcessor
+from pymig.db_vendor import DBVendor
+from pymig.utils import get_index_of
+from pymig.table import Table
+from pymig.fs_ops import log
+from pymig.conversion import Conversion
+from pymig.table_processor import create_table
+from pymig.data_chunks_processor import prepare_data_chunks
 
 
 def load_structure(conversion: Conversion) -> None:

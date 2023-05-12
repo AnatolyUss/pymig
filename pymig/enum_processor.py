@@ -17,12 +17,12 @@ __license__ = """
 """
 from typing import cast
 
-import app.db_access as DBAccess
-import app.extra_config_processor as ExtraConfigProcessor
-from app.conversion import Conversion
-from app.db_vendor import DBVendor
-from app.utils import get_index_of
-from app.fs_ops import log
+import pymig.db_access as DBAccess
+import pymig.extra_config_processor as ExtraConfigProcessor
+from pymig.conversion import Conversion
+from pymig.db_vendor import DBVendor
+from pymig.utils import get_index_of
+from pymig.fs_ops import log
 
 
 def process_enum(conversion: Conversion, table_name: str) -> None:

@@ -18,12 +18,12 @@ __license__ = """
 import json
 from typing import cast, Any
 
-import app.db_access as DBAccess
-import app.extra_config_processor as ExtraConfigProcessor
-from app.db_vendor import DBVendor
-from app.fs_ops import log
-from app.columns_data_arranger import arrange_columns_data
-from app.conversion import Conversion
+import pymig.db_access as DBAccess
+import pymig.extra_config_processor as ExtraConfigProcessor
+from pymig.db_vendor import DBVendor
+from pymig.fs_ops import log
+from pymig.columns_data_arranger import arrange_columns_data
+from pymig.conversion import Conversion
 
 
 def prepare_data_chunks(

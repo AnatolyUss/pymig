@@ -17,10 +17,10 @@ __license__ = """
 """
 from typing import Any, cast
 
-import app.db_access as DBAccess
-from app.db_vendor import DBVendor
-from app.fs_ops import log
-from app.conversion import Conversion
+import pymig.db_access as DBAccess
+from pymig.db_vendor import DBVendor
+from pymig.fs_ops import log
+from pymig.conversion import Conversion
 
 
 def get_state_logs_table_name(conversion: Conversion) -> str:
