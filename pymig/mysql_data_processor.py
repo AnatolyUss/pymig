@@ -3,7 +3,9 @@ import io
 
 def process_mysql_data(batch: tuple[tuple[str, ...], ...]) -> io.StringIO:
     """
-    TODO: add description.
+    Accepts a batch of records from ``MySQLdb``,
+    and returns this batch converted to ``io.StringIO`` instance
+    with a string in CSV format (TSV uses tab instead of comma).
     """
     # Note, the list comprehension below wrapped in square brackets on purpose.
     # DO NOT strip the brackets, since it will work slower.

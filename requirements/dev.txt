@@ -1,7 +1,5 @@
 -r base.txt
 
-# mypy==0.920
-# mypy-extensions==0.4.3
 mypy==1.3.0
 mypy-extensions==1.0.0
 psutil==5.8.0

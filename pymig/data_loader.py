@@ -29,8 +29,7 @@ from pymig.fs_ops import log, generate_error
 from pymig.conversion import Conversion
 from pymig.constraints_processor import process_constraints_per_table
 from pymig.utils import track_memory, get_cpu_count
-from pymig.mysql_data_processor import process_mysql_data  # ##############
-# from app.mypyc_mysql_data_processor import process_mysql_data  # ############
+from pymig.mysql_data_processor import process_mysql_data
 
 
 @track_memory
@@ -225,7 +224,7 @@ def _arrange_and_load_batch(
         pg_client.commit()
 
         number_of_inserted_rows += rows_to_insert
-        msg = (f'[{_arrange_and_load_batch.__name__}] For now inserted: {number_of_inserted_rows} rows, '
+        msg = (f'[{_arrange_and_load_batch.__name__}] Just inserted: {number_of_inserted_rows} more rows, '
                f'Total rows to insert into "{conversion.schema}"."{table_name}": {rows_cnt}')
 
         log(conversion, msg)
