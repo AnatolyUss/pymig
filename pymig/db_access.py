@@ -26,10 +26,10 @@ from MySQLdb import (
     cursors as MySQLdbCursors,
 )
 
-from app.db_access_query_result import DBAccessQueryResult
-from app.fs_ops import generate_error
-from app.db_vendor import DBVendor
-from app.conversion import Conversion
+from pymig.db_access_query_result import DBAccessQueryResult
+from pymig.fs_ops import generate_error
+from pymig.db_vendor import DBVendor
+from pymig.conversion import Conversion
 
 
 def _ensure_mysql_connection(conversion: Conversion) -> None:

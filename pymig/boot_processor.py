@@ -19,10 +19,10 @@ import time
 import sys
 from typing import cast, Any
 
-import app.db_access as DBAccess
-from app.db_vendor import DBVendor
-from app.fs_ops import generate_error
-from app.conversion import Conversion
+import pymig.db_access as DBAccess
+from pymig.db_vendor import DBVendor
+from pymig.fs_ops import generate_error
+from pymig.conversion import Conversion
 
 
 def boot(conversion: Conversion) -> None:

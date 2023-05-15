@@ -17,11 +17,11 @@ __license__ = """
 """
 from typing import cast, Any
 
-import app.db_access as DBAccess
-import app.extra_config_processor as ExtraConfigProcessor
-from app.fs_ops import log
-from app.conversion import Conversion
-from app.db_vendor import DBVendor
+import pymig.db_access as DBAccess
+import pymig.extra_config_processor as ExtraConfigProcessor
+from pymig.fs_ops import log
+from pymig.conversion import Conversion
+from pymig.db_vendor import DBVendor
 
 
 def process_comments(conversion: Conversion, table_name: str) -> None:

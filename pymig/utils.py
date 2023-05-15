@@ -19,7 +19,7 @@ import os
 import gc
 from typing import Union, Callable, Any
 
-from app.conversion import Conversion
+from pymig.conversion import Conversion
 
 
 def get_cpu_count() -> int:
@@ -60,7 +60,7 @@ def track_memory(func: Callable) -> Callable:
 
         import math
         import psutil
-        from app.fs_ops import log
+        from pymig.fs_ops import log
 
         def _get_process_memory_stats() -> tuple[int, int]:
             """

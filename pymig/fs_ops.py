@@ -19,7 +19,7 @@ import os
 import json
 from typing import Optional, cast
 
-from app.conversion import Conversion
+from pymig.conversion import Conversion
 
 
 def create_logs_directory(conversion: Conversion) -> None:

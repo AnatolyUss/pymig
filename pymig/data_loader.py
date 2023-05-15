@@ -21,14 +21,15 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from dbutils.pooled_db import PooledDedicatedDBConnection
 
-import app.db_access as DBAccess
-import app.migration_state_manager as MigrationStateManager
-import app.extra_config_processor as ExtraConfigProcessor
-from app.db_vendor import DBVendor
-from app.fs_ops import log, generate_error
-from app.conversion import Conversion
-from app.constraints_processor import process_constraints_per_table
-from app.utils import track_memory, get_cpu_count
+import pymig.db_access as DBAccess
+import pymig.migration_state_manager as MigrationStateManager
+import pymig.extra_config_processor as ExtraConfigProcessor
+from pymig.db_vendor import DBVendor
+from pymig.fs_ops import log, generate_error
+from pymig.conversion import Conversion
+from pymig.constraints_processor import process_constraints_per_table
+from pymig.utils import track_memory, get_cpu_count
+from pymig.mysql_data_processor import process_mysql_data
 
 
 @track_memory
@@ -104,7 +105,8 @@ def populate_table_worker(
     original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
     sql = f'SELECT {select_field_list} FROM `{original_table_name}`;'
     original_session_replication_role = None
-    text_stream, pg_cursor, pg_client, mysql_client, mysql_cursor = None, None, None, None, None
+    text_stream: Optional[io.StringIO] = None
+    pg_cursor, pg_client, mysql_client, mysql_cursor = None, None, None, None
 
     try:
         mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
@@ -141,7 +143,7 @@ def populate_table_worker(
                 # 3. The data retrieved by "mysql_cursor.fetchmany" is eventually copied to the write-worker.
                 # 4. Batch size of 30000 rows seems reasonable for maximal speed without memory spikes.
                 # 5. !!!Significant increase of batch size DOES NOT lead to noticeable performance improvement.
-                batch = mysql_cursor.fetchmany(batch_size)
+                batch: tuple[tuple[str, ...], ...] = mysql_cursor.fetchmany(batch_size)
                 buffered_batches += 1
                 rows_to_insert = len(batch)
 
@@ -149,10 +151,7 @@ def populate_table_worker(
                     # No more records to insert.
                     break
 
-                rows = '\n'.join(['\t'.join(record) for record in batch])
-                text_stream = io.StringIO()
-                text_stream.write(rows)
-                text_stream.seek(0)
+                text_stream = process_mysql_data(batch)
 
                 _arrange_and_load_batch_params = [
                     conversion.config,
@@ -163,7 +162,7 @@ def populate_table_worker(
                     number_of_inserted_rows,
                 ]
 
-                future = executor.submit(_arrange_and_load_batch, *_arrange_and_load_batch_params)
+                future = executor.submit(_arrange_and_load_batch, *_arrange_and_load_batch_params)  # type: ignore
 
                 # !!!Below, use only "is None" comparison, and not "if not..."
                 # _arrange_and_load_batch always returns string (which may be empty),
@@ -225,7 +224,7 @@ def _arrange_and_load_batch(
         pg_client.commit()
 
         number_of_inserted_rows += rows_to_insert
-        msg = (f'[{_arrange_and_load_batch.__name__}] For now inserted: {number_of_inserted_rows} rows, '
+        msg = (f'[{_arrange_and_load_batch.__name__}] Just inserted: {number_of_inserted_rows} more rows, '
                f'Total rows to insert into "{conversion.schema}"."{table_name}": {rows_cnt}')
 
         log(conversion, msg)
@@ -240,7 +239,7 @@ def delete_data_pool_item(
     conversion: Conversion,
     data_pool_id: int,
     pg_client: PooledDedicatedDBConnection,
-    original_session_replication_role: Optional[str] = None
+    original_session_replication_role: Optional[str] = None,
 ) -> None:
     """
     Deletes given record from the data-pool.

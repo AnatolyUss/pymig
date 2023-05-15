@@ -15,16 +15,16 @@ __license__ = """
     along with this program (please see the "LICENSE.md" file).
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
-import app.migration_state_manager as MigrationStateManager
-from app.conversion import Conversion
-from app.indexes_processor import create_indexes
-from app.enum_processor import process_enum
-from app.sequences_processor import set_sequence_value, create_sequence
-from app.null_processor import process_null
-from app.default_processor import process_default
-from app.comments_processor import process_comments
-from app.view_generator import generate_views
-from app.foreign_key_processor import set_foreign_keys
+import pymig.migration_state_manager as MigrationStateManager
+from pymig.conversion import Conversion
+from pymig.indexes_processor import create_indexes
+from pymig.enum_processor import process_enum
+from pymig.sequences_processor import set_sequence_value, create_sequence
+from pymig.null_processor import process_null
+from pymig.default_processor import process_default
+from pymig.comments_processor import process_comments
+from pymig.view_generator import generate_views
+from pymig.foreign_key_processor import set_foreign_keys
 
 
 def process_constraints(conversion: Conversion) -> None:

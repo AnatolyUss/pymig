@@ -17,7 +17,7 @@ __license__ = """
 """
 from typing import cast
 
-from app.conversion import Conversion
+from pymig.conversion import Conversion
 
 
 def get_column_name(

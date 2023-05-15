@@ -19,8 +19,8 @@ import time
 import math
 from typing import cast
 
-from app.conversion import Conversion
-from app.fs_ops import log
+from pymig.conversion import Conversion
+from pymig.fs_ops import log
 
 
 def generate_report(conversion: Conversion, last_message: str) -> None:

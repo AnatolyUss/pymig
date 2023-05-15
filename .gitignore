@@ -1,5 +1,9 @@
 .idea
 logs_directory
+build
+dist
 __pycache__
 Pipefile
 Pipefile.lock
+misc.txt
+mypyc_output.egg-info

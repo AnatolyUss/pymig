@@ -21,7 +21,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from dbutils.pooled_db import PooledDB
 
-from app.table import Table
+from pymig.table import Table
 
 
 class Conversion:
@@ -143,7 +143,7 @@ class Conversion:
         """
         Runs given function asynchronously with different parameter-sets.
         """
-        from app.fs_ops import generate_error
+        from pymig.fs_ops import generate_error
         number_of_tasks = len(params_list)
 
         if number_of_tasks == 0:

@@ -23,17 +23,17 @@ cwd = os.getcwd()
 sys.path.append(cwd)
 
 
-import app.db_access as DBAccess
-from app.fs_ops import read_config, read_extra_config, create_logs_directory, read_data_types_map, read_index_types_map
-from app.boot_processor import boot, get_introduction_message
-from app.schema_processor import create_schema
-from app.conversion import Conversion
-from app.binary_data_decoder import decode
-from app.report_generator import generate_report
-from app.migration_state_manager import create_state_logs_table, create_data_pool_table, read_data_pool
-from app.structure_loader import load_structure
-from app.constraints_processor import process_constraints
-from app.data_loader import send_data
+import pymig.db_access as DBAccess
+from pymig.fs_ops import read_config, read_extra_config, create_logs_directory, read_data_types_map, read_index_types_map
+from pymig.boot_processor import boot, get_introduction_message
+from pymig.schema_processor import create_schema
+from pymig.conversion import Conversion
+from pymig.binary_data_decoder import decode
+from pymig.report_generator import generate_report
+from pymig.migration_state_manager import create_state_logs_table, create_data_pool_table, read_data_pool
+from pymig.structure_loader import load_structure
+from pymig.constraints_processor import process_constraints
+from pymig.data_loader import send_data
 
 
 if __name__ == '__main__':
