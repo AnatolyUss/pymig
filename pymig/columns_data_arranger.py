@@ -32,7 +32,8 @@ def arrange_columns_data(
     wkb_func = 'ST_AsWKB' if float(mysql_version) >= 5.76 else 'AsWKB'
 
     for column in table_columns:
-        col_field, col_type = column['Field'], column['Type']
+        col_field = column['Field']
+        col_type = get_sanitized_type(column['Type'])
 
         if is_spacial(col_type):
             # Apply HEX(ST_AsWKB(...)) due to the issue, described at https://bugs.mysql.com/bug.php?id=69798
@@ -96,3 +97,13 @@ def is_bit(data_type: str) -> bool:
     Defines if given type is one of MySQL bit type.
     """
     return get_index_of('bit', data_type) != -1
+
+
+def get_sanitized_type(data_type: str) -> str:
+    """
+    Returns type name, while dropping unnecessary parts.
+    Sample:
+    1. "enum" instead of "enum('val1','val2','val3')".
+    2. "int" instead of "int(11)".
+    """
+    return data_type.split("(")[0]

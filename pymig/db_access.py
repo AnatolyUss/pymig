@@ -18,6 +18,7 @@ __license__ = """
 import sys
 from typing import Optional, Union
 
+import asyncpg
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from dbutils.pooled_db import PooledDB, PooledDedicatedDBConnection
@@ -105,6 +106,27 @@ def close_connection_pools(conversion: Conversion) -> None:
                 pool.close()
             except Exception as e:
                 generate_error(conversion, f'[{close_connection_pools.__name__}] {repr(e)}')
+
+
+async def get_async_pg_connection(conversion: Conversion) -> asyncpg.connection.Connection:
+    """
+    Obtains and returns an ``asyncpg`` connection.
+    Used to efficiently transfer data over PostgreSQL binary copy.
+    """
+    return await asyncpg.connect(
+        port=conversion.target_con_string['port'],
+        host=conversion.target_con_string['host'],
+        user=conversion.target_con_string['user'],
+        password=conversion.target_con_string['password'],
+        database=conversion.target_con_string['database'],
+    )
+
+
+async def release_async_pg_connection(connection: asyncpg.connection.Connection) -> None:
+    """
+    Releases given ``asyncpg`` connection.
+    """
+    await connection.close()
 
 
 def get_mysql_unbuffered_client(conversion: Conversion) -> MySQLdbConnection:

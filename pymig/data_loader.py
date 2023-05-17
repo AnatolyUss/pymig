@@ -16,6 +16,7 @@ __license__ = """
     If not, see <http://www.gnu.org/licenses/gpl.txt>.
 """
 import io
+import asyncio
 from typing import Optional, Any, cast
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -105,8 +106,7 @@ def populate_table_worker(
     original_table_name = ExtraConfigProcessor.get_table_name(conversion, table_name, True)
     sql = f'SELECT {select_field_list} FROM `{original_table_name}`;'
     original_session_replication_role = None
-    text_stream: Optional[io.StringIO] = None
-    pg_cursor, pg_client, mysql_client, mysql_cursor = None, None, None, None
+    text_stream, pg_client, mysql_client, mysql_cursor = None, None, None, None
 
     try:
         mysql_client = DBAccess.get_mysql_unbuffered_client(conversion)
@@ -151,7 +151,10 @@ def populate_table_worker(
                     # No more records to insert.
                     break
 
-                text_stream = process_mysql_data(batch)
+                rows: str = process_mysql_data(batch)
+                text_stream = io.BytesIO()
+                text_stream.write(bytearray(rows, conversion.target_con_string["charset"]))
+                text_stream.seek(0)
 
                 _arrange_and_load_batch_params = [
                     conversion.config,
@@ -181,7 +184,7 @@ def populate_table_worker(
         error_message = f'[{populate_table_worker.__name__}] {e}\n\t--[{populate_table_worker.__name__}] {msg}'
         generate_error(conversion, error_message, sql)
     finally:
-        for resource in (text_stream, pg_cursor, mysql_cursor, mysql_client):
+        for resource in (text_stream, mysql_cursor, mysql_client):
             if resource:
                 resource.close()
 
@@ -198,7 +201,7 @@ def populate_table_worker(
 def _arrange_and_load_batch(
     conversion_config: dict,
     table_name: str,
-    text_stream: io.StringIO,
+    text_stream: io.BytesIO,
     rows_cnt: int,
     rows_to_insert: int,
     number_of_inserted_rows: int
@@ -212,16 +215,11 @@ def _arrange_and_load_batch(
 
     try:
         pg_client = DBAccess.get_db_client(conversion, DBVendor.PG)
-        pg_cursor = pg_client.cursor()
 
         if conversion.should_migrate_only_data():
             original_session_replication_role = disable_triggers(conversion, pg_client)
 
-        sql_copy = (f'COPY "{conversion.schema}"."{table_name}" FROM STDIN'
-                    f' WITH(FORMAT text, DELIMITER \'\t\', ENCODING \'{conversion.target_con_string["charset"]}\');')
-
-        pg_cursor.copy_expert(sql=sql_copy, file=text_stream)
-        pg_client.commit()
+        asyncio.run(_async_arrange_and_load_batch(conversion, table_name, text_stream))
 
         number_of_inserted_rows += rows_to_insert
         msg = (f'[{_arrange_and_load_batch.__name__}] Just inserted: {number_of_inserted_rows} more rows, '
@@ -233,6 +231,16 @@ def _arrange_and_load_batch(
         generate_error(conversion, error_message)
     finally:
         return original_session_replication_role
+
+
+async def _async_arrange_and_load_batch(
+    conversion: Conversion,
+    table_name: str,
+    text_stream: io.BytesIO,
+) -> None:
+    async_pg_connection = await DBAccess.get_async_pg_connection(conversion)
+    await async_pg_connection.copy_to_table(table_name, source=text_stream)
+    await DBAccess.release_async_pg_connection(async_pg_connection)
 
 
 def delete_data_pool_item(
