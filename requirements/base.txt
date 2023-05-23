@@ -3,5 +3,4 @@
 DBUtils==3.0.0
 mysqlclient==2.1.0
 psycopg2-binary==2.9.2
-asyncpg==0.27.0
 tomli==2.0.1
