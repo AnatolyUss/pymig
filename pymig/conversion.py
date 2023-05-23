@@ -67,7 +67,7 @@ class Conversion:
         'number_of_loader_processes', '_thread_pool_executor', 'index_types_map', 'index_types_map_addr',
     )
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Conversion class constructor.
         """

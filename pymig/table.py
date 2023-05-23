@@ -24,7 +24,7 @@ class Table:
 
     __slots__ = ('table_log_path', 'table_columns')
 
-    def __init__(self, table_log_path: str):
+    def __init__(self, table_log_path: str) -> None:
         """
         Class constructor.
         """

@@ -32,7 +32,7 @@ class DBAccessQueryResult:
         client: Optional[PooledDedicatedDBConnection],
         data: Optional[list[dict[str, Any]]],
         error: Optional[Exception]
-    ):
+    ) -> None:
         """
         Class constructor.
         """

@@ -1,0 +1,46 @@
+--
+
+select exists (
+    select x.*
+    from (
+        select
+             (select count(1) from user_stat) = 0 as user_stat_cnt_correct,
+             (select count(1) from user_login) = 0 as user_login_cnt_correct,
+             (select count(1) from user) = 10001 as user_cnt_correct,
+             (select count(1) from title) = 443308 as title_cnt_correct,
+             (select count(1) from tinyint_asc) = 256 as tinyint_asc_cnt_correct,
+             (select count(1) from test_null_in_text) = 4 as test_null_in_text_cnt_correct,
+             (select count(1) from photo) = 1200096 as photo_cnt_correct,
+             (select count(1) from month) = 12 as month_cnt_correct,
+             (select count(1) from invoice) = 973488 as invoice_cnt_correct,
+             (select count(1) from contract) = 300024 as contract_cnt_correct,
+             (select count(1) from date) = 20000 as date_cnt_correct,
+             (select count(1) from department) = 9 as department_cnt_correct,
+             (select count(1) from department_employee_rel) = 331603 as department_employee_rel_cnt_correct,
+             (select count(1) from department_manager_rel) = 24 as department_manager_rel_cnt_correct,
+             (select count(1) from employee) = 300024 as employee_cnt_correct,
+             (select count(1) from event_logger) = 0 as event_logger_cnt_correct,
+             (select count(1) from salary) = 2844047 as salary_cnt_correct
+     ) as x
+    where 1 = 1
+        and (
+            x.user_stat_cnt_correct <> 1
+            or x.user_login_cnt_correct <> 1
+            or x.user_cnt_correct <> 1
+            or x.title_cnt_correct <> 1
+            or x.tinyint_asc_cnt_correct <> 1
+            or x.test_null_in_text_cnt_correct <> 1
+            or x.photo_cnt_correct <> 1
+            or x.month_cnt_correct <> 1
+            or x.invoice_cnt_correct <> 1
+            or x.contract_cnt_correct <> 1
+            or x.date_cnt_correct <> 1
+            or x.department_cnt_correct <> 1
+            or x.department_employee_rel_cnt_correct <> 1
+            or x.department_manager_rel_cnt_correct <> 1
+            or x.employee_cnt_correct <> 1
+            or x.event_logger_cnt_correct <> 1
+            or x.salary_cnt_correct <> 1
+        )
+) as have_mistakes;
+
