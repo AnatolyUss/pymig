@@ -20,7 +20,7 @@ __license__ = """
 def process_mysql_data(batch: tuple[tuple[str, ...], ...]) -> str:
     """
     Accepts a batch of records from ``MySQLdb``,
-    and returns a string in CSV format (TSV uses tab instead of comma).
+    and returns a string in TSV format (TSV uses tab instead of comma).
     """
     # Note, the list comprehension below wrapped in square brackets on purpose.
     # DO NOT strip the brackets, since it will work slower.
